@@ -545,6 +545,13 @@
     justify-content: center; transition: all .15s; margin-bottom: 16px;
   }
   .recipe-add-ingredient-btn:hover { background: var(--card2); border-color: var(--accent); }
+  .import-recipe-btn {
+    padding: 9px 16px; background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: var(--radius-sm); color: var(--accent2);
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .import-recipe-btn:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); border-color: var(--accent); }
 
   .recipe-totals {
     background: var(--bg3); border-radius: var(--radius-sm);
@@ -1397,8 +1404,11 @@
     <!-- ══════════ RECIPES ══════════ -->
     <div class="section" id="section-recipes">
       <div class="recipe-builder">
-        <h2>Recipe Builder</h2>
-        <p>Add ingredients, set total servings, then log how much you ate.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+          <h2 style="margin:0">Recipe Builder</h2>
+          <button class="import-recipe-btn" onclick="openIngredientModalForRecipe()">📋 Import from Online Recipe</button>
+        </div>
+        <p style="margin-bottom:14px">Add ingredients manually or paste a full ingredient list from any recipe site.</p>
 
         <input class="recipe-name-input" id="recipeName" placeholder="Recipe name (e.g. Chicken Stir Fry)">
 
@@ -1625,26 +1635,32 @@
 
 <!-- Paste Ingredients Modal -->
 <div class="modal-overlay" id="ingredientModal">
-  <div class="modal">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeModal('ingredientModal'); openModal('foodModal')" style="margin-right:4px">‹</button>
-      <div class="modal-title">📋 Paste Ingredient List</div>
+  <div class="modal" style="max-height:92vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <button class="modal-close" id="ingBackBtn" onclick="ingModalBack()" style="margin-right:4px">‹</button>
+      <div class="modal-title" id="ingModalTitle">📋 Import Recipe Ingredients</div>
       <button class="modal-close" onclick="closeModal('ingredientModal')">✕</button>
     </div>
-    <div class="modal-body" style="padding:16px;overflow-y:auto">
+    <div class="modal-body" style="padding:16px;overflow-y:auto;flex:1">
+
+      <!-- Context hint -->
+      <div id="ingContextHint" style="display:none;padding:10px 12px;background:color-mix(in srgb,var(--accent) 10%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:10px;font-size:13px;color:var(--text2);margin-bottom:12px"></div>
 
       <!-- API Key (for Claude lookups) -->
-      <div class="ing-api-row">
-        <div class="ing-api-label">Claude API Key — only used when an ingredient isn't in the database or your local cache</div>
-        <div class="ing-api-inner">
-          <input class="ing-api-input" id="ingApiKey" type="password" placeholder="sk-ant-…">
-          <button class="ing-api-toggle" id="ingKeyToggle" onclick="toggleIngKey()">Show</button>
+      <details id="ingApiDetails">
+        <summary style="cursor:pointer;font-size:12px;color:var(--text3);padding:4px 0;user-select:none">🔑 Claude API Key (only needed for ingredients not in the local database)</summary>
+        <div class="ing-api-row" style="margin-top:8px">
+          <div class="ing-api-inner">
+            <input class="ing-api-input" id="ingApiKey" type="password" placeholder="sk-ant-…">
+            <button class="ing-api-toggle" id="ingKeyToggle" onclick="toggleIngKey()">Show</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Most common ingredients are in the local database and require no API call. The key is used only for unusual items.</div>
         </div>
-      </div>
+      </details>
 
       <!-- Textarea -->
-      <div class="ing-textarea-label">Paste your ingredient list below — one ingredient per line</div>
-      <textarea class="ing-textarea" id="ingTextarea" placeholder="e.g.&#10;2 cups all-purpose flour&#10;1 tbsp olive oil&#10;3 large eggs&#10;1/2 cup sugar&#10;1 tsp vanilla extract&#10;1/4 tsp salt"></textarea>
+      <div class="ing-textarea-label" style="margin-top:12px">Paste the ingredient list below — copy directly from any recipe website:</div>
+      <textarea class="ing-textarea" id="ingTextarea" placeholder="e.g.&#10;2 cups all-purpose flour&#10;1 tbsp olive oil&#10;3 large eggs&#10;1/2 cup sugar&#10;1 tsp vanilla extract&#10;1/4 tsp salt&#10;2 cloves garlic, minced&#10;1 lb chicken breast"></textarea>
       <button class="ing-parse-btn" id="ingParseBtn" onclick="parseIngredients()">🔍 Look Up Nutrition</button>
 
       <!-- Status -->
@@ -1654,13 +1670,13 @@
       <div class="ing-results-wrap" id="ingResultsWrap">
         <div class="ing-results-header">
           <span id="ingResultsTitle">Results</span>
-          <button class="ing-add-all-btn" onclick="addAllIngredients('recipe')">Add All to Recipe</button>
+          <button class="ing-add-all-btn" id="ingAddAllBtn" onclick="addAllIngredients(_ingContext)">✓ Add All</button>
         </div>
         <div id="ingResultsList"></div>
         <div class="ing-cache-info" id="ingCacheInfo"></div>
-        <div class="ing-footer">
-          <button class="ing-footer-btn ing-to-recipe" onclick="addCheckedIngredients('recipe')">✓ Add Checked to Recipe</button>
-          <button class="ing-footer-btn ing-to-diary"  onclick="addCheckedIngredients('diary')">✓ Add to Diary</button>
+        <div class="ing-footer" id="ingFooter">
+          <button class="ing-footer-btn ing-to-recipe" id="ingToRecipeBtn" onclick="addCheckedIngredients('recipe')">✓ Add to Recipe</button>
+          <button class="ing-footer-btn ing-to-diary"  id="ingToDiaryBtn"  onclick="addCheckedIngredients('diary')">✓ Add to Diary</button>
         </div>
       </div>
 
@@ -5398,19 +5414,32 @@ function addCheckedIngredients(target) {
 
   if (target === 'recipe') {
     for (const r of checked) {
-      // Build a pseudo-food object compatible with the recipe builder
-      const food = r.per100g ? { ...r.per100g, id: 90000 + Math.random()*10000|0, name: r.name, brand: r.source === 'ai' ? 'AI Lookup' : r.source === 'cache' ? 'Cached' : '',
-        servings: [{ name: `~${r.grams}g`, g: r.grams }] } : null;
-      if (!food) continue;
-      recipeIngredients.push({ food, grams: r.grams, servingName: `~${r.grams}g` });
+      if (!r.totals) continue;
+      const food = r.per100g ? {
+        ...r.per100g,
+        id: 90000 + (Math.random()*10000|0),
+        name: r.name,
+        brand: r.source === 'ai' ? 'AI Lookup' : r.source === 'cache' ? 'Cached' : 'DB',
+        servings: [{ name: `~${r.grams}g`, g: r.grams }]
+      } : null;
+      recipeIngredients.push({
+        food,
+        grams: r.grams,
+        name: r.name,
+        servingLabel: `~${r.grams}g`,
+        cal: r.totals.cal,
+        protein: r.totals.protein,
+        carbs: r.totals.carbs,
+        fat: r.totals.fat,
+      });
     }
     renderRecipeIngredients();
+    updateRecipeTotals();
     closeModal('ingredientModal');
-    // Switch to recipes tab
-    const recipeTab = [...document.querySelectorAll('.tab')].find(t => t.textContent.trim() === 'Recipes');
-    if (recipeTab) showSection('recipes', recipeTab);
+    showSection('recipes');
+    toast(`✅ ${checked.length} ingredient${checked.length>1?'s':''} added to recipe!`);
   } else {
-    // Add to diary as individual entries under current meal or Snacks
+    // Add to diary as individual entries under Snacks
     const k = dateKey(currentDate);
     if (!diary[k]) diary[k] = { meals: { breakfast:[], lunch:[], dinner:[], snacks:[] }, water: 0 };
     for (const r of checked) {
@@ -5419,20 +5448,60 @@ function addCheckedIngredients(target) {
     saveState();
     closeModal('ingredientModal');
     renderAll();
-    const diaryTab = [...document.querySelectorAll('.tab')].find(t => t.textContent.trim() === 'Diary');
-    if (diaryTab) showSection('diary', diaryTab);
+    showSection('diary');
+    toast(`✅ ${checked.length} ingredient${checked.length>1?'s':''} added to diary!`);
   }
 }
 
-function openIngredientModal() {
-  document.getElementById('ingApiKey').value = localStorage.getItem('nt_apikey') || '';
+// _ingContext tracks where the modal was opened from: 'recipe' or 'diary'
+let _ingContext = 'diary';
+
+function _initIngModal() {
+  const saved = localStorage.getItem('nt_apikey') || '';
+  document.getElementById('ingApiKey').value = saved;
+  if (saved) document.getElementById('ingApiDetails').removeAttribute('open');
+  else        document.getElementById('ingApiDetails').setAttribute('open', '');
   document.getElementById('ingTextarea').value = '';
   document.getElementById('ingStatus').style.display = 'none';
   document.getElementById('ingResultsWrap').style.display = 'none';
   document.getElementById('ingParseBtn').disabled = false;
   ingResults = [];
+}
+
+// Called from the diary / food modal flow
+function openIngredientModal() {
+  _ingContext = 'diary';
+  _initIngModal();
+  document.getElementById('ingModalTitle').textContent = '📋 Paste Ingredient List';
+  document.getElementById('ingContextHint').style.display = 'none';
+  document.getElementById('ingBackBtn').onclick = () => { closeModal('ingredientModal'); openModal('foodModal'); };
+  // Show both action buttons equally
+  document.getElementById('ingToRecipeBtn').style.display = '';
+  document.getElementById('ingToDiaryBtn').style.display  = '';
+  document.getElementById('ingAddAllBtn').textContent = '✓ Add All to Diary';
   closeModal('foodModal');
   openModal('ingredientModal');
+}
+
+// Called from the recipe builder — recipe-focused flow
+function openIngredientModalForRecipe() {
+  _ingContext = 'recipe';
+  _initIngModal();
+  document.getElementById('ingModalTitle').textContent = '📋 Import Recipe Ingredients';
+  const hint = document.getElementById('ingContextHint');
+  hint.style.display = 'block';
+  hint.textContent = '📌 Paste the ingredient list from any recipe website. All ingredients will be added to your current recipe builder.';
+  document.getElementById('ingBackBtn').onclick = () => { closeModal('ingredientModal'); };
+  // Emphasize the recipe button, hide diary button
+  document.getElementById('ingToRecipeBtn').style.display = '';
+  document.getElementById('ingToDiaryBtn').style.display  = 'none';
+  document.getElementById('ingAddAllBtn').textContent = '✓ Add All to Recipe';
+  openModal('ingredientModal');
+}
+
+function ingModalBack() {
+  closeModal('ingredientModal');
+  if (_ingContext === 'diary') openModal('foodModal');
 }
 
 function toggleIngKey() {
