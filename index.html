@@ -59,22 +59,85 @@
     display: flex; align-items: flex-start; justify-content: center;
   }
 
-  /* ── App shell — phone-frame on desktop ── */
+  /* ── App shell — full responsive layout ── */
   .app {
-    display: flex; flex-direction: column;
-    width: 100%; max-width: 430px;
+    display: flex; flex-direction: row;
+    width: 100%;
     min-height: 100vh; min-height: 100dvh;
     background: var(--bg);
     position: relative;
-    overflow: hidden;
   }
-  @media (min-width: 500px) {
-    body { align-items: center; padding: 0; }
-    .app {
-      min-height: 100vh; min-height: 100dvh;
-      box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 32px 80px rgba(0,0,0,.7);
+
+  /* Content area (topbar + main + bottom-nav) */
+  .app-content {
+    display: flex; flex-direction: column;
+    flex: 1; min-width: 0;
+    min-height: 100vh; min-height: 100dvh;
+  }
+
+  /* ── Sidebar nav (desktop only) ── */
+  .sidebar {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    body { align-items: stretch; }
+    .sidebar {
+      display: flex; flex-direction: column;
+      width: 230px; flex-shrink: 0;
+      background: var(--nav-bg);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px 24px;
+      position: sticky; top: 0; height: 100vh;
+      overflow-y: auto;
+      box-shadow: 2px 0 16px rgba(0,0,0,.18);
     }
+    .bottom-nav { display: none !important; }
+    .main { padding: 28px 36px 28px; }
+    .topbar { padding: 12px 24px; }
   }
+  @media (min-width: 1100px) {
+    .sidebar { width: 256px; }
+  }
+
+  /* Sidebar logo */
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 28px; padding: 4px 8px;
+  }
+  /* Sidebar nav items */
+  .sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .snav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all .18s;
+    color: var(--text2); font-size: 14px; font-weight: 600;
+    position: relative; user-select: none;
+  }
+  .snav-item:hover { background: rgba(255,255,255,.05); color: var(--text1); }
+  .snav-item.active {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent2);
+  }
+  .snav-item.active::before {
+    content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 3px; border-radius: 2px; background: var(--accent);
+  }
+  .snav-icon { font-size: 19px; flex-shrink: 0; line-height: 1; }
+  .snav-label { font-size: 14px; font-weight: 600; }
+  .sidebar-footer {
+    margin-top: auto; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .sidebar-footer-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all .18s; border: none;
+    background: none; color: var(--text3); font-size: 13px; font-weight: 600;
+    font-family: var(--font); width: 100%; text-align: left;
+  }
+  .sidebar-footer-btn:hover { background: rgba(255,255,255,.05); color: var(--text2); }
 
   /* ── Top bar ── */
   .topbar {
@@ -88,6 +151,7 @@
     gap: 8px;
   }
   .logo { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+  @media (min-width: 768px) { .logo { display: none; } }
   .logo-icon {
     width: 34px; height: 34px; border-radius: 10px;
     background: linear-gradient(135deg, var(--accent), var(--green));
@@ -722,6 +786,36 @@
   .goals-save-btn:hover { opacity: .9; }
   .goals-section-title { font-size: 11px; font-weight: 700; color: var(--text3);
     text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 8px; grid-column: 1/-1; }
+  /* Macro mode toggle */
+  .macro-mode-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .macro-mode-btn {
+    flex: 1; padding: 8px 10px; border-radius: 8px;
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text2); font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .15s; font-family: var(--font);
+  }
+  .macro-mode-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .macro-mode-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent2); }
+  .pct-total-pill {
+    display: inline-block; padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; margin-bottom: 10px;
+    transition: all .2s;
+  }
+  .pct-total-ok   { background: rgba(34,211,165,.15); color: var(--green); }
+  .pct-total-warn { background: rgba(250,204,21,.15);  color: var(--yellow); }
+  .pct-total-over { background: rgba(248,113,113,.15); color: var(--red); }
+  .pct-gram-preview {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    background: var(--bg3); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+  }
+  .pct-gram-item { font-size: 12px; font-weight: 700; }
+  /* Wider dashboard grid on large screens */
+  @media (min-width: 900px) {
+    .summary-grid { grid-template-columns: auto 1fr 1fr; }
+    .calorie-ring-card { grid-column: 1; }
+    .macro-panel { grid-column: 2 / 4; }
+    .micros-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  }
 
   /* ── Fitness Section ── */
   .fitness-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -876,6 +970,79 @@
   .sync-clear-btn { color: var(--red); background: none; border: none; font-size: 12px; cursor: pointer; }
   .sync-clear-btn:hover { text-decoration: underline; }
 
+  /* ── Workout Import Modal ── */
+  .import-workout-btn {
+    background: linear-gradient(135deg, rgba(34,211,165,.15), rgba(56,189,248,.15));
+    border: 1.5px solid var(--green); border-radius: var(--radius-sm);
+    color: var(--green); padding: 8px 16px; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .import-workout-btn:hover { background: linear-gradient(135deg, rgba(34,211,165,.25), rgba(56,189,248,.25)); }
+  .fitness-header-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ex-distance-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3); border-radius: 10px; padding: 12px; margin-bottom: 10px;
+  }
+  .ex-distance-row label { font-size: 13px; color: var(--text2); flex: 1; }
+  .ex-distance-input {
+    width: 80px; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; color: var(--text1); font-size: 15px; text-align: center;
+  }
+  .dist-unit-btn {
+    padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text3); font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+  }
+  .dist-unit-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .ex-pace-display {
+    text-align: center; font-size: 13px; color: var(--text2); margin: 6px 0;
+    background: var(--bg3); border-radius: 8px; padding: 8px;
+    display: none;
+  }
+  .workout-import-upload {
+    border: 2px dashed var(--green); border-radius: var(--radius);
+    padding: 32px 16px; text-align: center; cursor: pointer; transition: all .2s;
+  }
+  .workout-import-upload:hover { background: rgba(34,211,165,.05); }
+  .workout-import-icon { font-size: 44px; margin-bottom: 8px; }
+  .workout-import-text { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .workout-import-sub { font-size: 12px; color: var(--text3); }
+  .workout-parse-status {
+    padding: 12px; border-radius: var(--radius-sm); font-size: 13px;
+    font-weight: 600; text-align: center; margin: 12px 0; display: none;
+  }
+  .workout-status-loading { background: rgba(34,211,165,.1); color: var(--green); }
+  .workout-status-error   { background: rgba(248,113,113,.1); color: var(--red); }
+  .workout-result-panel { display: none; margin-top: 14px; }
+  .workout-result-title { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .workout-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .workout-field { display: flex; flex-direction: column; gap: 4px; }
+  .workout-field label { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .workout-field input, .workout-field select {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text1); padding: 8px 10px; font-size: 13px;
+    font-family: var(--font);
+  }
+  .workout-field input:focus, .workout-field select:focus { outline: none; border-color: var(--accent); }
+  .workout-cal-preview {
+    background: rgba(248,113,113,.1); border-radius: var(--radius-sm);
+    padding: 12px; text-align: center; font-size: 22px; font-weight: 800;
+    color: var(--red); margin-bottom: 14px;
+  }
+  .workout-cal-sub { font-size: 12px; color: var(--text3); font-weight: 400; }
+  .workout-confirm-btn {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, var(--green), var(--blue));
+    border: none; border-radius: var(--radius-sm); color: white;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .2s;
+  }
+  .workout-confirm-btn:hover { opacity: .9; }
+  .workout-source-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    background: rgba(34,211,165,.12); color: var(--green); margin-bottom: 10px;
+  }
+  .exercise-distance { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
   /* ── Paste Ingredients Modal ── */
   .paste-ing-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
     padding: 8px 12px; color: var(--text2); font-size: 12px; cursor: pointer; white-space: nowrap; }
@@ -932,6 +1099,41 @@
 </head>
 <body>
 <div class="app">
+
+  <!-- ══ Sidebar (desktop) ══ -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon" id="sidebarLogoIcon">🥗</div>
+      <div class="logo-text" id="sidebarLogoText">Nutri<span>Track</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="snav-item active" id="snav-dashboard" onclick="showSection('dashboard',this)">
+        <span class="snav-icon">🏠</span><span class="snav-label">Home</span>
+      </div>
+      <div class="snav-item" id="snav-diary" onclick="showSection('diary',this)">
+        <span class="snav-icon">📔</span><span class="snav-label">Diary</span>
+      </div>
+      <div class="snav-item" id="snav-fitness" onclick="showSection('fitness',this)">
+        <span class="snav-icon">💪</span><span class="snav-label">Fitness</span>
+      </div>
+      <div class="snav-item" id="snav-recipes" onclick="showSection('recipes',this)">
+        <span class="snav-icon">🍳</span><span class="snav-label">Recipes</span>
+      </div>
+      <div class="snav-item" id="snav-progress" onclick="showSection('progress',this)">
+        <span class="snav-icon">📊</span><span class="snav-label">Progress</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="openGoalsModal()">⚙️ Goals</button>
+      <button class="sidebar-footer-btn" onclick="openCustModal()">🎨 Customize</button>
+      <button class="sidebar-footer-btn" onclick="openSyncModal()">
+        <div class="sync-dot" id="syncDotSidebar"></div> Sync
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ Main content area ══ -->
+  <div class="app-content">
 
   <!-- Top Bar -->
   <div class="topbar">
@@ -1064,7 +1266,10 @@
     <div class="section" id="section-fitness">
       <div class="fitness-header">
         <h2>🏋️ Fitness</h2>
-        <button class="add-exercise-btn" onclick="openExerciseModal()">+ Log Exercise</button>
+        <div class="fitness-header-btns">
+          <button class="import-workout-btn" onclick="openWorkoutImport()">📱 Import Screenshot</button>
+          <button class="add-exercise-btn" onclick="openExerciseModal()">+ Log Exercise</button>
+        </div>
       </div>
       <div class="fitness-summary">
         <div><div class="fit-stat-val" id="fitBurned">0</div><div class="fit-stat-lbl">Calories Burned</div></div>
@@ -1177,7 +1382,8 @@
     </div>
   </div>
 
-</div>
+  </div><!-- /.app-content -->
+</div><!-- /.app -->
 
 <!-- Food Search Modal -->
 <div class="modal-overlay" id="foodModal">
@@ -1451,21 +1657,58 @@
           <input type="number" id="g-weight" placeholder="70" min="30" max="300">
         </div>
         <div class="goals-section-title">Macros</div>
-        <div class="goals-field">
-          <label>Protein (g)</label>
-          <input type="number" id="g-protein" placeholder="150" min="0" max="500">
-        </div>
-        <div class="goals-field">
-          <label>Carbs (g)</label>
-          <input type="number" id="g-carbs" placeholder="200" min="0" max="1000">
-        </div>
-        <div class="goals-field">
-          <label>Fat (g)</label>
-          <input type="number" id="g-fat" placeholder="65" min="0" max="500">
-        </div>
-        <div class="goals-field">
-          <label>Fiber (g)</label>
-          <input type="number" id="g-fiber" placeholder="30" min="0" max="200">
+        <!-- Full-width macro section -->
+        <div style="grid-column:1/-1">
+          <!-- Mode toggle -->
+          <div class="macro-mode-row">
+            <button id="macroModeGrams" class="macro-mode-btn active" onclick="setMacroMode('grams')">📊 Enter Grams</button>
+            <button id="macroModePct" class="macro-mode-btn" onclick="setMacroMode('pct')">⚡ % Split</button>
+          </div>
+
+          <!-- Grams panel -->
+          <div id="macroGramsPanel" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="goals-field">
+              <label>Protein (g)</label>
+              <input type="number" id="g-protein" placeholder="150" min="0" max="500">
+            </div>
+            <div class="goals-field">
+              <label>Carbs (g)</label>
+              <input type="number" id="g-carbs" placeholder="200" min="0" max="1000">
+            </div>
+            <div class="goals-field">
+              <label>Fat (g)</label>
+              <input type="number" id="g-fat" placeholder="65" min="0" max="500">
+            </div>
+            <div class="goals-field">
+              <label>Fiber (g)</label>
+              <input type="number" id="g-fiber" placeholder="30" min="0" max="200">
+            </div>
+          </div>
+
+          <!-- % Split panel — updateMacroPct() fills the grams inputs above -->
+          <div id="macroPctPanel" style="display:none">
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Split your <strong style="color:var(--text1)" id="pctCalDisplay">2000</strong> daily calories between the three macros. Must total 100%. Fiber goal stays in grams.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+              <div class="goals-field">
+                <label style="color:var(--protein)">Protein %</label>
+                <input type="number" id="g-pct-protein" placeholder="30" min="0" max="100" oninput="updateMacroPct()" style="border-color:rgba(124,106,255,.4)">
+              </div>
+              <div class="goals-field">
+                <label style="color:var(--carbs)">Carbs %</label>
+                <input type="number" id="g-pct-carbs" placeholder="45" min="0" max="100" oninput="updateMacroPct()" style="border-color:rgba(56,189,248,.4)">
+              </div>
+              <div class="goals-field">
+                <label style="color:var(--fat)">Fat %</label>
+                <input type="number" id="g-pct-fat" placeholder="25" min="0" max="100" oninput="updateMacroPct()" style="border-color:rgba(249,115,22,.4)">
+              </div>
+            </div>
+            <div id="macroPctTotal" class="pct-total-pill pct-total-warn">Total: 0%</div>
+            <div id="macroPctPreview" class="pct-gram-preview" style="display:none"></div>
+            <div class="goals-field" style="margin-top:10px">
+              <label>Fiber (g)</label>
+              <input type="number" id="g-fiber-pct" placeholder="30" min="0" max="200">
+            </div>
+          </div>
         </div>
         <div class="goals-section-title">Hydration</div>
         <div class="goals-field">
@@ -1492,21 +1735,139 @@
         <div class="ex-category-row" id="exCatRow"></div>
         <div class="ex-results" id="exResultsList"></div>
       </div>
-      <!-- Step 2: Set duration -->
+      <!-- Step 2: Set duration / distance -->
       <div id="exStep2" style="display:none">
         <div class="ex-selected-name" id="exSelectedName"></div>
         <div class="ex-weight-row">
           <label>Your weight (kg)</label>
-          <input class="ex-weight-input" type="number" id="exWeight" value="70" min="30" max="300">
+          <input class="ex-weight-input" type="number" id="exWeight" value="70" min="30" max="300" oninput="updateExCalPreview()">
         </div>
+        <!-- Distance row — shown only for distance-based activities -->
+        <div class="ex-distance-row" id="exDistanceRow" style="display:none">
+          <label>Distance <span style="color:var(--text3)" id="exDistHint">(optional)</span></label>
+          <input class="ex-distance-input" type="number" id="exDistance" placeholder="0.0" step="0.1" min="0" max="1000" oninput="updateExCalPreview()">
+          <div style="display:flex;gap:4px">
+            <button id="distUnitMi" class="dist-unit-btn active" onclick="setDistUnit('mi')">mi</button>
+            <button id="distUnitKm" class="dist-unit-btn" onclick="setDistUnit('km')">km</button>
+          </div>
+        </div>
+        <!-- Pace display — appears when distance + duration both have values -->
+        <div class="ex-pace-display" id="exPaceDisplay"></div>
         <div class="ex-duration-row">
           <label>Duration (minutes)</label>
-          <input class="ex-duration-input" type="number" id="exDuration" value="30" min="1" max="600">
+          <input class="ex-duration-input" type="number" id="exDuration" value="30" min="1" max="600" oninput="updateExCalPreview()">
         </div>
         <div id="exCalPreview" style="text-align:center;margin:10px 0;font-size:15px;color:var(--red);font-weight:700"></div>
         <button class="ex-log-btn" onclick="logExercise()">🔥 Log Exercise</button>
         <button style="width:100%;margin-top:8px;padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--text2);cursor:pointer;font-size:13px" onclick="backToExSearch()">← Back to search</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Workout Import Modal (Strava / Garmin screenshot reader) -->
+<div class="modal-overlay" id="workoutImportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📱 Import Workout</div>
+      <button class="modal-close" onclick="closeModal('workoutImportModal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px;overflow-y:auto">
+
+      <!-- Upload area -->
+      <div id="wiUploadArea">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6">
+          Take a screenshot of your <strong style="color:var(--text1)">Strava</strong>, <strong style="color:var(--text1)">Garmin Connect</strong>, <strong style="color:var(--text1)">Apple Fitness</strong>, or any workout summary. The app will read the stats automatically.
+        </div>
+        <label class="workout-import-upload" id="wiDropZone">
+          <input type="file" id="wiFileInput" accept="image/*" style="display:none" onchange="handleWorkoutImage(this)">
+          <div class="workout-import-icon">📸</div>
+          <div class="workout-import-text">Tap to upload screenshot</div>
+          <div class="workout-import-sub">Strava · Garmin · Apple Fitness · Nike Run Club · etc.</div>
+        </label>
+        <!-- Image preview -->
+        <div id="wiImagePreview" style="display:none;margin-top:10px;text-align:center">
+          <img id="wiPreviewImg" style="max-width:100%;max-height:200px;border-radius:10px;border:1px solid var(--border)" src="">
+          <button onclick="clearWorkoutImage()" style="display:block;margin:8px auto 0;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:6px 14px;font-size:12px;cursor:pointer">Change image</button>
+        </div>
+        <!-- Status -->
+        <div id="wiStatus" class="workout-parse-status"></div>
+        <!-- Analyze button -->
+        <button id="wiAnalyzeBtn" class="scan-analyze-btn" onclick="analyzeWorkoutScreenshot()" style="display:none;background:linear-gradient(135deg,var(--green),var(--blue))">
+          🔍 Read Workout Stats
+        </button>
+      </div>
+
+      <!-- Result panel (shown after OCR) -->
+      <div class="workout-result-panel" id="wiResultPanel">
+        <div class="workout-result-title">
+          <span>✅ Workout detected</span>
+          <span class="workout-source-badge" id="wiSourceBadge">📱 Screenshot</span>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Review and edit the values below before logging.</div>
+
+        <div class="workout-field-grid">
+          <div class="workout-field" style="grid-column:1/-1">
+            <label>Activity Type</label>
+            <select id="wiActivity">
+              <option value="run">🏃 Running</option>
+              <option value="walk">🚶 Walking</option>
+              <option value="hike">🥾 Hiking</option>
+              <option value="bike">🚴 Cycling / Ride</option>
+              <option value="swim">🏊 Swimming</option>
+              <option value="strength">🏋️ Strength / Weights</option>
+              <option value="hiit">🔥 HIIT / CrossFit</option>
+              <option value="yoga">🧘 Yoga / Pilates</option>
+              <option value="other">🏅 Other Workout</option>
+            </select>
+          </div>
+          <div class="workout-field">
+            <label>Duration (min)</label>
+            <input type="number" id="wiDuration" min="1" max="600" oninput="updateWorkoutCalPreview()" placeholder="45">
+          </div>
+          <div class="workout-field">
+            <label>Distance</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="number" id="wiDistance" step="0.01" min="0" placeholder="3.2" oninput="updateWorkoutCalPreview()" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px;font-size:13px">
+              <select id="wiDistUnit" onchange="updateWorkoutCalPreview()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px;font-size:13px">
+                <option value="mi">mi</option>
+                <option value="km">km</option>
+              </select>
+            </div>
+          </div>
+          <div class="workout-field">
+            <label>Calories (if shown)</label>
+            <input type="number" id="wiCals" min="0" placeholder="auto" oninput="updateWorkoutCalPreview()">
+          </div>
+          <div class="workout-field">
+            <label>Avg Heart Rate (bpm)</label>
+            <input type="number" id="wiHR" min="40" max="220" placeholder="—">
+          </div>
+          <div class="workout-field">
+            <label>Elevation Gain</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="number" id="wiElev" min="0" placeholder="—" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px;font-size:13px">
+              <select id="wiElevUnit" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px;font-size:13px">
+                <option value="ft">ft</option>
+                <option value="m">m</option>
+              </select>
+            </div>
+          </div>
+          <div class="workout-field">
+            <label>Your Weight (kg)</label>
+            <input type="number" id="wiWeight" min="30" max="300" oninput="updateWorkoutCalPreview()">
+          </div>
+        </div>
+
+        <!-- Calorie preview -->
+        <div class="workout-cal-preview" id="wiCalPreview">
+          — cal<div class="workout-cal-sub">estimated burn</div>
+        </div>
+
+        <button class="workout-confirm-btn" onclick="confirmWorkoutImport()">✅ Log This Workout</button>
+        <button onclick="resetWorkoutImport()" style="width:100%;margin-top:8px;padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--text2);cursor:pointer;font-size:13px">← Try a different screenshot</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -3360,10 +3721,14 @@ function getDayTotals() {
 function showSection(id, navEl) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.snav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('section-' + id).classList.add('active');
-  // navEl may be a nav-item div or a child of it — walk up if needed
+  // Activate bottom-nav item
   const navItem = navEl?.closest?.('.nav-item') || document.getElementById('nav-' + id) || navEl;
   if (navItem) navItem.classList.add('active');
+  // Activate sidebar item
+  const snavItem = document.getElementById('snav-' + id);
+  if (snavItem) snavItem.classList.add('active');
   if (id === 'progress') renderProgress();
   if (id === 'fitness')  renderFitness();
 }
@@ -4629,7 +4994,15 @@ function applyCustomization() {
     const mid = Math.floor(appName.length / 2);
     logoEl.innerHTML = appName.slice(0, mid) + '<span>' + appName.slice(mid) + '</span>';
   }
-  const iconEl = document.getElementById('logoIconEl'); if (iconEl) iconEl.textContent = s.appIcon || '🥗';
+  ['logoIconEl','sidebarLogoIcon'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = s.appIcon || '🥗';
+  });
+  // Sidebar logo text
+  const sidebarLogoText = document.getElementById('sidebarLogoText');
+  if (sidebarLogoText) {
+    const mid = Math.floor(appName.length / 2);
+    sidebarLogoText.innerHTML = appName.slice(0, mid) + '<span>' + appName.slice(mid) + '</span>';
+  }
 }
 
 function lightenHex(hex, amount) {
@@ -4769,10 +5142,12 @@ let syncDebounceTimer = null;
 
 // ── Indicator helpers ────────────────────────────────────────────────────────
 function setSyncState(state, label) {
-  const dot = document.getElementById('syncDot');
+  const cls = 'sync-dot' + (state ? ' ' + state : '');
+  ['syncDot','syncDotSidebar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = cls;
+  });
   const lbl = document.getElementById('syncBtnLabel');
-  if (!dot) return;
-  dot.className = 'sync-dot' + (state ? ' ' + state : '');
   if (lbl && label) lbl.textContent = label;
 }
 function updateSyncIndicator() {
@@ -4975,17 +5350,84 @@ function clearSyncSettings() {
 // ══════════════════════════════════
 // GOALS
 // ══════════════════════════════════
+let _macroMode = 'grams';
+
+function setMacroMode(mode) {
+  _macroMode = mode;
+  const isGrams = mode === 'grams';
+  document.getElementById('macroGramsPanel').style.display = isGrams ? 'grid' : 'none';
+  document.getElementById('macroPctPanel').style.display   = isGrams ? 'none' : 'block';
+  document.getElementById('macroModeGrams').classList.toggle('active', isGrams);
+  document.getElementById('macroModePct').classList.toggle('active', !isGrams);
+  if (!isGrams) {
+    // Seed pct fields from current gram goals + calories
+    const cal = GOALS.cal || 2000;
+    document.getElementById('pctCalDisplay').textContent = cal;
+    // Back-calculate current percentages
+    const p = Math.round((GOALS.protein * 4 / cal) * 100);
+    const c = Math.round((GOALS.carbs   * 4 / cal) * 100);
+    const f = Math.round((GOALS.fat     * 9 / cal) * 100);
+    document.getElementById('g-pct-protein').value = p || '';
+    document.getElementById('g-pct-carbs').value   = c || '';
+    document.getElementById('g-pct-fat').value     = f || '';
+    document.getElementById('g-fiber-pct').value   = GOALS.fiber || 30;
+    updateMacroPct();
+  }
+}
+
+function updateMacroPct() {
+  const cal = parseFloat(document.getElementById('g-cal').value) || GOALS.cal || 2000;
+  document.getElementById('pctCalDisplay').textContent = cal;
+  const p = parseFloat(document.getElementById('g-pct-protein').value) || 0;
+  const c = parseFloat(document.getElementById('g-pct-carbs').value)   || 0;
+  const f = parseFloat(document.getElementById('g-pct-fat').value)     || 0;
+  const total = p + c + f;
+  // Total pill
+  const totalEl = document.getElementById('macroPctTotal');
+  totalEl.textContent = `Total: ${total}%`;
+  totalEl.className = 'pct-total-pill ' + (total === 100 ? 'pct-total-ok' : total > 100 ? 'pct-total-over' : 'pct-total-warn');
+  // Gram calculations
+  const pg = Math.round((cal * p / 100) / 4);
+  const cg = Math.round((cal * c / 100) / 4);
+  const fg = Math.round((cal * f / 100) / 9);
+  const preview = document.getElementById('macroPctPreview');
+  if (p || c || f) {
+    preview.style.display = 'flex';
+    preview.innerHTML = `
+      <span class="pct-gram-item" style="color:var(--protein)">🥩 Protein: ${pg}g</span>
+      <span style="color:var(--text3)">·</span>
+      <span class="pct-gram-item" style="color:var(--carbs)">🍞 Carbs: ${cg}g</span>
+      <span style="color:var(--text3)">·</span>
+      <span class="pct-gram-item" style="color:var(--fat)">🥑 Fat: ${fg}g</span>
+      ${total !== 100 ? '<span style="color:var(--text3);font-size:11px;width:100%">← adjust to reach 100%</span>' : ''}
+    `;
+  } else {
+    preview.style.display = 'none';
+  }
+  // Push computed grams into the canonical hidden inputs so saveGoals() reads them
+  document.getElementById('g-protein').value = pg || '';
+  document.getElementById('g-carbs').value   = cg || '';
+  document.getElementById('g-fat').value     = fg || '';
+  document.getElementById('g-fiber').value   = document.getElementById('g-fiber-pct').value;
+}
+
 function openGoalsModal() {
-  document.getElementById('g-cal').value = GOALS.cal;
+  _macroMode = 'grams';
+  setMacroMode('grams');
+  document.getElementById('g-cal').value     = GOALS.cal;
   document.getElementById('g-protein').value = GOALS.protein;
-  document.getElementById('g-carbs').value = GOALS.carbs;
-  document.getElementById('g-fat').value = GOALS.fat;
-  document.getElementById('g-fiber').value = GOALS.fiber;
-  document.getElementById('g-water').value = GOALS.water;
-  document.getElementById('g-weight').value = GOALS.weight || 70;
+  document.getElementById('g-carbs').value   = GOALS.carbs;
+  document.getElementById('g-fat').value     = GOALS.fat;
+  document.getElementById('g-fiber').value   = GOALS.fiber;
+  document.getElementById('g-water').value   = GOALS.water;
+  document.getElementById('g-weight').value  = GOALS.weight || 70;
   openModal('goalsModal');
 }
 function saveGoals() {
+  // In pct mode, sync fiber from its own input
+  if (_macroMode === 'pct') {
+    document.getElementById('g-fiber').value = document.getElementById('g-fiber-pct').value;
+  }
   const v = id => { const n = parseFloat(document.getElementById(id).value); return isNaN(n) ? null : n; };
   if (v('g-cal'))     GOALS.cal     = v('g-cal');
   if (v('g-protein')) GOALS.protein = v('g-protein');
@@ -5003,10 +5445,15 @@ function saveGoals() {
 // FITNESS / EXERCISE
 // ══════════════════════════════════
 const EXERCISE_DB = [
-  // Cardio
+  // Cardio — running, walking, cycling get distanceBased so user can enter distance
+  { id:'run',   name:'Running',        cat:'Cardio', icon:'🏃', met:9.8,  distanceBased:true,  distType:'run'  },
+  { id:'walk',  name:'Walking',        cat:'Cardio', icon:'🚶', met:3.5,  distanceBased:true,  distType:'walk' },
+  { id:'hike',  name:'Hiking / Trail', cat:'Cardio', icon:'🥾', met:6.0,  distanceBased:true,  distType:'walk' },
+  { id:'bike',  name:'Cycling / Ride', cat:'Cardio', icon:'🚴', met:8.0,  distanceBased:true,  distType:'bike' },
+  { id:'swim',  name:'Swimming',       cat:'Cardio', icon:'🏊', met:7.0,  distanceBased:true,  distType:'swim' },
+  // Keep legacy IDs so old stored entries still display
   { id:'run_6', name:'Running (6 mph)', cat:'Cardio', icon:'🏃', met:9.8 },
   { id:'run_8', name:'Running (8 mph)', cat:'Cardio', icon:'🏃', met:11.8 },
-  { id:'walk', name:'Walking (3 mph)', cat:'Cardio', icon:'🚶', met:3.5 },
   { id:'walk_fast', name:'Walking brisk (4 mph)', cat:'Cardio', icon:'🚶', met:5.0 },
   { id:'cycling_mod', name:'Cycling (moderate)', cat:'Cardio', icon:'🚴', met:8.0 },
   { id:'cycling_fast', name:'Cycling (vigorous)', cat:'Cardio', icon:'🚴', met:12.0 },
@@ -5106,12 +5553,63 @@ function renderExerciseResults() {
     : '<div style="text-align:center;color:var(--text3);padding:24px">No exercises found</div>';
 }
 
+let _distUnit = 'mi'; // global distance unit preference
+
+function setDistUnit(u) {
+  _distUnit = u;
+  document.getElementById('distUnitMi').classList.toggle('active', u === 'mi');
+  document.getElementById('distUnitKm').classList.toggle('active', u === 'km');
+  updateExCalPreview();
+}
+
+// Map pace (min/mile) to MET for running
+function paceToMET(paceMinPerMile, distType) {
+  if (distType === 'run') {
+    if (paceMinPerMile < 6)   return 14.5;
+    if (paceMinPerMile < 7)   return 12.8;
+    if (paceMinPerMile < 8)   return 11.8;
+    if (paceMinPerMile < 9.5) return 10.0;
+    if (paceMinPerMile < 11)  return 8.5;
+    if (paceMinPerMile < 13)  return 7.0;
+    return 5.0; // very slow jog / run-walk
+  } else if (distType === 'walk') {
+    if (paceMinPerMile < 12) return 5.0;
+    if (paceMinPerMile < 15) return 4.0;
+    if (paceMinPerMile < 20) return 3.5;
+    return 2.8;
+  } else if (distType === 'bike') {
+    // pace = min/mile for bike; speed = 60/pace (mph)
+    const mph = 60 / paceMinPerMile;
+    if (mph > 20) return 15.8;
+    if (mph > 16) return 12.0;
+    if (mph > 12) return 10.0;
+    if (mph > 10) return 8.0;
+    if (mph > 8)  return 6.0;
+    return 4.0;
+  } else if (distType === 'swim') {
+    // pace in min/100m equivalent — rough
+    return 7.0;
+  }
+  return null; // fallback to default MET
+}
+
 function selectExercise(id) {
   selectedExercise = EXERCISE_DB.find(e => e.id === id);
   if (!selectedExercise) return;
   document.getElementById('exSelectedName').textContent = selectedExercise.icon + ' ' + selectedExercise.name;
   document.getElementById('exWeight').value = GOALS.weight || 70;
-  document.getElementById('exDuration').value = 30;
+  document.getElementById('exDuration').value = '';
+  // Distance field
+  const distRow = document.getElementById('exDistanceRow');
+  const distInput = document.getElementById('exDistance');
+  distInput.value = '';
+  if (selectedExercise.distanceBased) {
+    distRow.style.display = 'flex';
+    document.getElementById('exDistHint').textContent = '(optional — improves accuracy)';
+  } else {
+    distRow.style.display = 'none';
+  }
+  document.getElementById('exPaceDisplay').style.display = 'none';
   document.getElementById('exStep1').style.display = 'none';
   document.getElementById('exStep2').style.display = 'block';
   updateExCalPreview();
@@ -5125,31 +5623,91 @@ function backToExSearch() {
 function updateExCalPreview() {
   if (!selectedExercise) return;
   const mins = parseFloat(document.getElementById('exDuration').value) || 0;
-  const w = parseFloat(document.getElementById('exWeight').value) || 70;
-  const cal = Math.round(selectedExercise.met * w * (mins / 60));
-  document.getElementById('exCalPreview').textContent = `🔥 Estimated burn: ${cal} calories`;
+  const w    = parseFloat(document.getElementById('exWeight').value)   || 70;
+  const rawDist = parseFloat(document.getElementById('exDistance')?.value) || 0;
+  const paceEl  = document.getElementById('exPaceDisplay');
+
+  let met = selectedExercise.met;
+  let paceText = '';
+
+  if (selectedExercise.distanceBased && rawDist > 0 && mins > 0) {
+    // Convert distance to miles for pace calc
+    const distMi = _distUnit === 'km' ? rawDist * 0.621371 : rawDist;
+    const paceMinPerMile = mins / distMi;
+    const derivedMET = paceToMET(paceMinPerMile, selectedExercise.distType);
+    if (derivedMET) met = derivedMET;
+
+    // Format pace string
+    if (selectedExercise.distType === 'bike') {
+      const mph = Math.round(distMi / (mins / 60) * 10) / 10;
+      const kph = Math.round(mph * 1.609 * 10) / 10;
+      paceText = `⚡ ${mph} mph · ${kph} km/h · MET ${met.toFixed(1)}`;
+    } else if (selectedExercise.distType === 'swim') {
+      paceText = `🏊 ${rawDist} ${_distUnit} · ${mins} min`;
+    } else {
+      // running / walking
+      const totalSecs = paceMinPerMile * 60;
+      const pMin = Math.floor(totalSecs / 60);
+      const pSec = Math.round(totalSecs % 60);
+      const paceStr = `${pMin}:${String(pSec).padStart(2,'0')}`;
+      const paceKm  = (() => { const s=paceMinPerMile*60*0.621371; return `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}`; })();
+      paceText = `🏃 ${paceStr}/mi · ${paceKm}/km · MET ${met.toFixed(1)}`;
+    }
+  }
+
+  const cal = mins > 0 ? Math.round(met * w * (mins / 60)) : 0;
+
+  if (paceText && mins > 0) {
+    paceEl.style.display = 'block';
+    paceEl.textContent = paceText;
+  } else {
+    paceEl.style.display = 'none';
+  }
+
+  const previewEl = document.getElementById('exCalPreview');
+  if (mins > 0) {
+    previewEl.innerHTML = `🔥 Estimated burn: <strong>${cal}</strong> cal${rawDist > 0 ? ` · ${rawDist} ${_distUnit}` : ''}`;
+  } else {
+    previewEl.textContent = 'Enter duration to see calorie estimate';
+    previewEl.style.color = 'var(--text3)';
+    previewEl.style.fontSize = '13px';
+  }
+  previewEl.style.color = cal > 0 ? 'var(--red)' : 'var(--text3)';
 }
 
 function logExercise() {
   if (!selectedExercise) return;
-  const mins = parseFloat(document.getElementById('exDuration').value) || 30;
-  const w = parseFloat(document.getElementById('exWeight').value) || 70;
-  const cal = Math.round(selectedExercise.met * w * (mins / 60));
+  const mins    = parseFloat(document.getElementById('exDuration').value) || 30;
+  const w       = parseFloat(document.getElementById('exWeight').value)   || 70;
+  const rawDist = parseFloat(document.getElementById('exDistance')?.value) || 0;
+
+  let met = selectedExercise.met;
+  if (selectedExercise.distanceBased && rawDist > 0) {
+    const distMi = _distUnit === 'km' ? rawDist * 0.621371 : rawDist;
+    const pace   = mins / distMi;
+    const d = paceToMET(pace, selectedExercise.distType);
+    if (d) met = d;
+  }
+
+  const cal = Math.round(met * w * (mins / 60));
   const k = dateKey(currentDate);
   if (!exercises[k]) exercises[k] = [];
   exercises[k].push({
-    id: selectedExercise.id,
-    name: selectedExercise.name,
-    icon: selectedExercise.icon,
-    cat: selectedExercise.cat,
-    minutes: mins,
+    id:       selectedExercise.id,
+    name:     selectedExercise.name,
+    icon:     selectedExercise.icon,
+    cat:      selectedExercise.cat,
+    minutes:  mins,
     cal,
-    weight: w
+    weight:   w,
+    distance: rawDist || null,
+    distUnit: rawDist ? _distUnit : null,
   });
   saveState();
   closeModal('exerciseModal');
   renderFitness();
   renderDashboard();
+  toast('💪 Exercise logged!');
 }
 
 function removeExercise(idx) {
@@ -5174,16 +5732,332 @@ function renderFitness() {
     el.innerHTML = '<div class="no-exercise">No exercises logged yet.<br>Tap <strong>+ Log Exercise</strong> to get started.</div>';
     return;
   }
-  el.innerHTML = list.map((e, i) => `
+  el.innerHTML = list.map((e, i) => {
+    const distStr = e.distance ? ` · ${e.distance} ${e.distUnit || 'mi'}` : '';
+    const hrStr   = e.hr ? ` · ♥ ${e.hr} bpm` : '';
+    const meta    = `${e.minutes} min${distStr}${hrStr} · ${e.cat}`;
+    return `
     <div class="exercise-card">
       <div class="exercise-icon">${e.icon}</div>
       <div class="exercise-info">
         <div class="exercise-name">${e.name}</div>
-        <div class="exercise-meta">${e.minutes} min · ${e.cat}</div>
+        <div class="exercise-meta">${meta}</div>
       </div>
       <div class="exercise-cal">-${e.cal} cal</div>
       <button class="exercise-remove" onclick="removeExercise(${i})">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════
+// WORKOUT SCREENSHOT IMPORT
+// ══════════════════════════════════
+
+function openWorkoutImport() {
+  resetWorkoutImport();
+  openModal('workoutImportModal');
+}
+
+function resetWorkoutImport() {
+  document.getElementById('wiUploadArea').style.display = 'block';
+  document.getElementById('wiResultPanel').style.display = 'none';
+  document.getElementById('wiImagePreview').style.display = 'none';
+  document.getElementById('wiPreviewImg').src = '';
+  document.getElementById('wiAnalyzeBtn').style.display = 'none';
+  document.getElementById('wiStatus').style.display = 'none';
+  document.getElementById('wiFileInput').value = '';
+}
+
+function clearWorkoutImage() {
+  document.getElementById('wiImagePreview').style.display = 'none';
+  document.getElementById('wiAnalyzeBtn').style.display = 'none';
+  document.getElementById('wiStatus').style.display = 'none';
+  document.getElementById('wiFileInput').value = '';
+  document.getElementById('wiPreviewImg').src = '';
+}
+
+function handleWorkoutImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('wiPreviewImg').src = e.target.result;
+    document.getElementById('wiImagePreview').style.display = 'block';
+    document.getElementById('wiAnalyzeBtn').style.display = 'block';
+    document.getElementById('wiStatus').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeWorkoutScreenshot() {
+  const imgSrc = document.getElementById('wiPreviewImg').src;
+  if (!imgSrc) return;
+  const statusEl = document.getElementById('wiStatus');
+  const btn = document.getElementById('wiAnalyzeBtn');
+
+  statusEl.className = 'workout-parse-status workout-status-loading';
+  statusEl.textContent = '🔍 Reading workout stats...';
+  statusEl.style.display = 'block';
+  btn.disabled = true;
+
+  try {
+    // Use Tesseract.js (already loaded) to extract text from the image
+    const result = await Tesseract.recognize(imgSrc, 'eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          statusEl.textContent = `🔍 Reading... ${Math.round(m.progress * 100)}%`;
+        }
+      }
+    });
+    const rawText = result.data.text;
+    const parsed  = parseWorkoutText(rawText);
+
+    if (!parsed) {
+      statusEl.className = 'workout-parse-status workout-status-error';
+      statusEl.textContent = '⚠️ Could not find workout stats. Make sure the screenshot shows the workout summary page.';
+      btn.disabled = false;
+      return;
+    }
+
+    statusEl.style.display = 'none';
+    populateWorkoutResult(parsed);
+  } catch (err) {
+    statusEl.className = 'workout-parse-status workout-status-error';
+    statusEl.textContent = '❌ OCR failed: ' + err.message;
+    btn.disabled = false;
+  }
+}
+
+// ─── Workout text parser ─────────────────────────────────────────────────────
+function parseWorkoutText(text) {
+  // Normalize: collapse whitespace, uppercase for keyword matching
+  const t  = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+  const TU = t.toUpperCase();
+
+  const out = { activity: null, durationMin: null, distanceMi: null, distanceKm: null, calories: null, hr: null, elev: null, elevUnit: null, pace: null };
+
+  // ── Activity type ──────────────────────────────────────────────────────────
+  if (/\b(RUN|RUNNING|5K|10K|HALF MARATHON|MARATHON)\b/.test(TU))        out.activity = 'run';
+  else if (/\b(RIDE|CYCLING|BIKE|BICYCLE|BIKING)\b/.test(TU))              out.activity = 'bike';
+  else if (/\b(HIKE|HIKING|TRAIL RUN)\b/.test(TU))                         out.activity = 'hike';
+  else if (/\b(WALK|WALKING)\b/.test(TU))                                   out.activity = 'walk';
+  else if (/\b(SWIM|SWIMMING|POOL|OPEN WATER)\b/.test(TU))                  out.activity = 'swim';
+  else if (/\b(YOGA|PILATES|STRETCH)\b/.test(TU))                           out.activity = 'yoga';
+  else if (/\b(STRENGTH|WEIGHT|LIFTING|GYM|CROSSFIT|HIIT)\b/.test(TU))     out.activity = 'strength';
+  else out.activity = 'other';
+
+  // ── Duration — try h:mm:ss, mm:ss, Xh Xm, Xm Xs patterns ─────────────────
+  let durMatch =
+    t.match(/\b(\d{1,2}):(\d{2}):(\d{2})\b/)     // h:mm:ss
+    || t.match(/\b(\d+)\s*h(?:r|our|ours?)?\s*(\d+)\s*m(?:in|ins?)?\b/i)  // 1h 23m
+    || t.match(/\b(\d+)m\s*(\d+)s\b/i);           // 45m 23s
+
+  if (durMatch) {
+    if (durMatch[0].includes(':') && durMatch[3] !== undefined) {
+      // h:mm:ss
+      out.durationMin = parseInt(durMatch[1]) * 60 + parseInt(durMatch[2]) + parseInt(durMatch[3]) / 60;
+    } else if (durMatch[0].toLowerCase().includes('h')) {
+      out.durationMin = parseInt(durMatch[1]) * 60 + parseInt(durMatch[2]);
+    } else {
+      out.durationMin = parseInt(durMatch[1]) + parseInt(durMatch[2]) / 60;
+    }
+    out.durationMin = Math.round(out.durationMin);
+  } else {
+    // mm:ss style (common in Strava)
+    const mmss = t.match(/\b(\d{1,3}):(\d{2})\b/g);
+    if (mmss) {
+      // Largest one is probably total time
+      let maxMin = 0;
+      mmss.forEach(m => {
+        const parts = m.split(':');
+        const mins = parseInt(parts[0]) + parseInt(parts[1]) / 60;
+        if (mins > maxMin) maxMin = mins;
+      });
+      out.durationMin = Math.round(maxMin);
+    }
+  }
+
+  // ── Distance ───────────────────────────────────────────────────────────────
+  // Miles: "3.2 mi" or "3.2 miles" or "3.2mi"
+  const miMatch = t.match(/(\d+\.?\d*)\s*mi(?:les?)?\b/i);
+  if (miMatch) out.distanceMi = parseFloat(miMatch[1]);
+
+  // Kilometers: "5.1 km" or "5.1k" or "5.1 kilometers"
+  const kmMatch = t.match(/(\d+\.?\d*)\s*k(?:m|ilometers?)?\b/i);
+  if (kmMatch && !miMatch) out.distanceKm = parseFloat(kmMatch[1]);
+
+  // If both, prefer mi (US default) — they may both appear on same screen
+  if (out.distanceMi && out.distanceKm) {
+    // Verify consistency: if km ≈ mi * 1.6 they're the same distance
+    if (Math.abs(out.distanceKm - out.distanceMi * 1.609) < 0.5) {
+      // both represent same distance — keep mi
+    } else {
+      // different numbers — likely two different activities, keep the bigger
+      if (out.distanceKm * 0.621 > out.distanceMi) {
+        out.distanceMi = out.distanceKm * 0.621371;
+        out.distanceKm = null;
+      }
+    }
+  }
+
+  // ── Calories ───────────────────────────────────────────────────────────────
+  // "342 Cal" "342 kcal" "342 Calories" — look for numbers near cal keywords
+  const calMatch = t.match(/(\d{3,5})\s*(?:cal(?:ories)?|kcal)/i)
+    || t.match(/(?:cal(?:ories)?|kcal)\s*:?\s*(\d{3,5})/i)
+    || TU.match(/CALORIES[\s:]*(\d{3,5})/);
+  if (calMatch) out.calories = parseInt(calMatch[1]);
+
+  // ── Heart Rate ─────────────────────────────────────────────────────────────
+  const hrMatch = t.match(/(?:avg\.?\s*h\.?r\.?|heart\s*rate|bpm)\s*:?\s*(\d{2,3})/i)
+    || t.match(/(\d{2,3})\s*bpm/i);
+  if (hrMatch) out.hr = parseInt(hrMatch[1]);
+
+  // ── Elevation ──────────────────────────────────────────────────────────────
+  const elevFt = t.match(/(\d{1,5})\s*ft\b/i);
+  const elevM  = t.match(/(\d{1,5})\s*m(?:eters?)?\b/i);
+  if (elevFt) { out.elev = parseInt(elevFt[1]); out.elevUnit = 'ft'; }
+  else if (elevM) { out.elev = parseInt(elevM[1]); out.elevUnit = 'm'; }
+
+  // ── Validate: need at least duration OR distance to be useful ──────────────
+  if (!out.durationMin && !out.distanceMi && !out.distanceKm && !out.calories) return null;
+
+  return out;
+}
+
+// Activity config for workout import calorie estimation
+const WORKOUT_ACTIVITY_CONFIG = {
+  run:      { icon:'🏃', name:'Running',        met:9.8,  distType:'run'  },
+  walk:     { icon:'🚶', name:'Walking',         met:3.5,  distType:'walk' },
+  hike:     { icon:'🥾', name:'Hiking',          met:6.0,  distType:'walk' },
+  bike:     { icon:'🚴', name:'Cycling',         met:8.0,  distType:'bike' },
+  swim:     { icon:'🏊', name:'Swimming',        met:7.0,  distType:'swim' },
+  strength: { icon:'🏋️', name:'Strength Training',met:5.0, distType:null  },
+  hiit:     { icon:'🔥', name:'HIIT',            met:10.0, distType:null  },
+  yoga:     { icon:'🧘', name:'Yoga',            met:2.5,  distType:null  },
+  other:    { icon:'🏅', name:'Workout',         met:5.0,  distType:null  },
+};
+
+function populateWorkoutResult(parsed) {
+  // Switch to result panel
+  document.getElementById('wiUploadArea').style.display = 'none';
+  document.getElementById('wiResultPanel').style.display = 'block';
+
+  // Prefill activity
+  const actSel = document.getElementById('wiActivity');
+  if (parsed.activity) actSel.value = parsed.activity;
+
+  // Duration
+  if (parsed.durationMin) document.getElementById('wiDuration').value = parsed.durationMin;
+
+  // Distance
+  if (parsed.distanceMi) {
+    document.getElementById('wiDistance').value = Math.round(parsed.distanceMi * 100) / 100;
+    document.getElementById('wiDistUnit').value = 'mi';
+  } else if (parsed.distanceKm) {
+    document.getElementById('wiDistance').value = Math.round(parsed.distanceKm * 100) / 100;
+    document.getElementById('wiDistUnit').value = 'km';
+  }
+
+  // Calories (from screenshot — shown if found)
+  if (parsed.calories) document.getElementById('wiCals').value = parsed.calories;
+
+  // HR
+  if (parsed.hr) document.getElementById('wiHR').value = parsed.hr;
+
+  // Elevation
+  if (parsed.elev) {
+    document.getElementById('wiElev').value = parsed.elev;
+    document.getElementById('wiElevUnit').value = parsed.elevUnit || 'ft';
+  }
+
+  // User weight default
+  document.getElementById('wiWeight').value = GOALS.weight || 70;
+
+  // Source badge — look for known app keywords in activity
+  updateWorkoutCalPreview();
+}
+
+function updateWorkoutCalPreview() {
+  const activity = document.getElementById('wiActivity').value;
+  const mins     = parseFloat(document.getElementById('wiDuration').value) || 0;
+  const manualCal = parseFloat(document.getElementById('wiCals').value) || 0;
+  const w        = parseFloat(document.getElementById('wiWeight').value) || 70;
+  const dist     = parseFloat(document.getElementById('wiDistance').value) || 0;
+  const distUnit = document.getElementById('wiDistUnit').value;
+  const cfg      = WORKOUT_ACTIVITY_CONFIG[activity] || WORKOUT_ACTIVITY_CONFIG.other;
+
+  let cal = 0;
+  if (manualCal > 0) {
+    // Prefer screenshot calories if available
+    cal = manualCal;
+  } else if (mins > 0) {
+    let met = cfg.met;
+    if (cfg.distType && dist > 0) {
+      const distMi = distUnit === 'km' ? dist * 0.621371 : dist;
+      const pace   = mins / distMi;
+      const derived = paceToMET(pace, cfg.distType);
+      if (derived) met = derived;
+    }
+    cal = Math.round(met * w * (mins / 60));
+  }
+
+  const previewEl = document.getElementById('wiCalPreview');
+  if (cal > 0) {
+    previewEl.innerHTML = `<span style="font-size:28px;font-weight:900">${cal}</span> cal<div class="workout-cal-sub">${manualCal > 0 ? 'from screenshot' : 'estimated from activity'}</div>`;
+  } else {
+    previewEl.innerHTML = `—<div class="workout-cal-sub">enter duration to estimate</div>`;
+  }
+}
+
+function confirmWorkoutImport() {
+  const activity = document.getElementById('wiActivity').value;
+  const mins     = parseFloat(document.getElementById('wiDuration').value) || 0;
+  const manualCal = parseFloat(document.getElementById('wiCals').value) || 0;
+  const w        = parseFloat(document.getElementById('wiWeight').value) || 70;
+  const dist     = parseFloat(document.getElementById('wiDistance').value) || 0;
+  const distUnit = document.getElementById('wiDistUnit').value;
+  const hr       = parseFloat(document.getElementById('wiHR').value) || null;
+  const elev     = parseFloat(document.getElementById('wiElev').value) || null;
+  const elevUnit = document.getElementById('wiElevUnit').value;
+  const cfg      = WORKOUT_ACTIVITY_CONFIG[activity] || WORKOUT_ACTIVITY_CONFIG.other;
+
+  if (!mins && !manualCal) { toast('⚠️ Please enter at least a duration.'); return; }
+
+  let cal = 0;
+  if (manualCal > 0) {
+    cal = manualCal;
+  } else {
+    let met = cfg.met;
+    if (cfg.distType && dist > 0) {
+      const distMi = distUnit === 'km' ? dist * 0.621371 : dist;
+      const derived = paceToMET(mins / distMi, cfg.distType);
+      if (derived) met = derived;
+    }
+    cal = Math.round(met * w * (mins / 60));
+  }
+
+  const k = dateKey(currentDate);
+  if (!exercises[k]) exercises[k] = [];
+  exercises[k].push({
+    id:       activity + '_import',
+    name:     cfg.name,
+    icon:     cfg.icon,
+    cat:      'Imported',
+    minutes:  mins || null,
+    cal,
+    weight:   w,
+    distance: dist || null,
+    distUnit: dist ? distUnit : null,
+    hr,
+    elev:     elev ? `${elev} ${elevUnit}` : null,
+    source:   'screenshot',
+  });
+
+  saveState();
+  closeModal('workoutImportModal');
+  renderFitness();
+  renderDashboard();
+  toast('✅ Workout imported!');
 }
 
 // ══════════════════════════════════
@@ -5203,9 +6077,7 @@ renderFitness();
   if (ok) { renderAll(); renderFitness(); }
 })();
 
-// wire up exercise duration/weight live preview
-document.getElementById('exDuration').addEventListener('input', updateExCalPreview);
-document.getElementById('exWeight').addEventListener('input', updateExCalPreview);
+// (exDuration, exWeight, exDistance all use oninput=updateExCalPreview() inline)
 
 // auto-save on every diary mutation
 const _rE = removeEntry; removeEntry = (m,i) => { _rE(m,i); saveState(); };
