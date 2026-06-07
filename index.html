@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link id="gfont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="foods.js"></script>
 <style>
   :root {
     /* ── Themeable (overridden by JS) ── */
@@ -428,6 +429,15 @@
   .food-result-name { font-size: 13px; font-weight: 600; }
   .food-result-detail { font-size: 11px; color: var(--text2); margin-top: 2px; }
   .food-result-cals { font-size: 14px; font-weight: 700; color: var(--accent2); }
+  .food-search-status { padding: 9px 16px; color: var(--text3); font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border); }
+  .food-source-badge { display:inline-flex; align-items:center; margin-left:5px; padding:1px 6px; border-radius:999px; font-size:9px; font-weight:800; letter-spacing:.04em; vertical-align:1px; }
+  .food-source-local { background:rgba(34,211,165,.12); color:var(--green); }
+  .food-source-web   { background:rgba(255,176,50,.13); color:#ffb032; }
+  .food-source-custom{ background:rgba(124,106,255,.13); color:var(--accent2); }
+  .recipe-meal-row { background:var(--bg3); border-radius:var(--radius-sm); padding:12px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+  .recipe-meal-row label { font-size:13px; color:var(--text2); flex:1; }
+  .recipe-meal-select { min-width:150px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; color:var(--text1); padding:8px 10px; font-size:13px; font-weight:700; }
+  .recipe-meal-select:focus { outline:none; border-color:var(--accent); }
 
   .no-results { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; }
 
@@ -1404,11 +1414,13 @@
     <!-- ══════════ RECIPES ══════════ -->
     <div class="section" id="section-recipes">
       <div class="recipe-builder">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
           <h2 style="margin:0">Recipe Builder</h2>
-          <button class="import-recipe-btn" onclick="openIngredientModalForRecipe()">📋 Import from Online Recipe</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="import-recipe-btn" onclick="newRecipe()" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border)">✦ New Recipe</button>
+            <button class="import-recipe-btn" onclick="openIngredientModalForRecipe()">📋 Import Ingredients</button>
+          </div>
         </div>
-        <p style="margin-bottom:14px">Add ingredients manually or paste a full ingredient list from any recipe site.</p>
 
         <input class="recipe-name-input" id="recipeName" placeholder="Recipe name (e.g. Chicken Stir Fry)">
 
@@ -1446,6 +1458,15 @@
           </div>
         </div>
 
+        <div class="recipe-meal-row">
+          <label for="recipeMealTarget">Add this serving to:</label>
+          <select class="recipe-meal-select" id="recipeMealTarget">
+            <option value="breakfast">🌅 Breakfast</option>
+            <option value="lunch">☀️ Lunch</option>
+            <option value="dinner">🌙 Dinner</option>
+            <option value="snacks" selected>🍎 Snacks</option>
+          </select>
+        </div>
         <button class="recipe-save-btn" onclick="saveRecipeToDiary()">Add This Serving to Diary</button>
       </div>
 
@@ -4604,6 +4625,154 @@ const FOODS = [
 
 
 // ══════════════════════════════════
+// CULTURAL FOODS (Asian + Latin)
+// ══════════════════════════════════
+function culturalFood(id, name, brand, cal, protein, carbs, fat, fiber, sugar, servings) {
+  return { id, name, brand, cal, protein, carbs, fat, fiber, sugar,
+    vitA:0,vitC:0,vitD:0,vitE:0,vitK:0,vitB1:0,vitB2:0,vitB3:0,vitB6:0,vitB12:0,folate:0,
+    calcium:0,iron:0,magnesium:0,potassium:0,sodium:0,zinc:0,
+    servings: servings || [{name:"100g",g:100},{name:"1 oz (28g)",g:28}] };
+}
+
+const CULTURAL_FOODS = [
+  // ── Asian: noodles & grains ──────────────────────────────────────────────
+  culturalFood(200001,"Jasmine Rice (cooked)","Asian staple",130,2.7,28.2,0.3,0.4,0.1,[{name:"100g",g:100},{name:"1 cup cooked (158g)",g:158},{name:"1/2 cup (79g)",g:79}]),
+  culturalFood(200002,"Sushi Rice (cooked)","Asian staple",130,2.4,28.7,0.2,0.3,0.1,[{name:"100g",g:100},{name:"1 cup cooked (158g)",g:158},{name:"1/2 cup (79g)",g:79}]),
+  culturalFood(200003,"Sticky Rice (cooked)","Thai/Lao staple",169,3.5,37,0.3,1,0.1,[{name:"100g",g:100},{name:"1 cup cooked (174g)",g:174}]),
+  culturalFood(200004,"Rice Noodles (cooked)","Asian noodle",109,1.8,24.9,0.2,0.9,0.1,[{name:"100g",g:100},{name:"1 cup cooked (176g)",g:176}]),
+  culturalFood(200005,"Rice Vermicelli (cooked)","Asian noodle",108,1.8,24.5,0.2,0.8,0.1,[{name:"100g",g:100},{name:"1 cup cooked (140g)",g:140}]),
+  culturalFood(200006,"Udon Noodles (cooked)","Japanese noodle",127,2.6,25.8,0.3,1,0.2,[{name:"100g",g:100},{name:"1 cup cooked (160g)",g:160}]),
+  culturalFood(200007,"Soba Noodles (cooked)","Japanese noodle",99,5.1,21.4,0.1,1,0.8,[{name:"100g",g:100},{name:"1 cup cooked (114g)",g:114}]),
+  culturalFood(200008,"Ramen Noodles (fresh cooked)","Asian noodle",149,5,27,2,1.5,1,[{name:"100g",g:100},{name:"1 cup cooked (140g)",g:140}]),
+  culturalFood(200009,"Glass Noodles (cooked)","Asian noodle",86,0.2,21.5,0,0.5,0,[{name:"100g",g:100},{name:"1 cup cooked (140g)",g:140}]),
+  culturalFood(200010,"Egg Noodles (Chinese cooked)","Asian noodle",138,4.5,25,2.1,1.2,0.6,[{name:"100g",g:100},{name:"1 cup cooked (160g)",g:160}]),
+  culturalFood(200011,"Wonton Wrappers","Asian ingredient",291,9,57,1.4,2.2,0.4,[{name:"100g",g:100},{name:"1 wrapper (8g)",g:8}]),
+  culturalFood(200012,"Spring Roll Wrappers (rice paper)","Asian ingredient",333,5.8,79,0.6,2.9,1,[{name:"100g",g:100},{name:"1 wrapper (10g)",g:10}]),
+  // ── Asian: proteins ─────────────────────────────────────────────────────
+  culturalFood(200020,"Firm Tofu","Soy protein",144,15.8,3.9,8.7,2.3,0.6,[{name:"100g",g:100},{name:"1/2 block (126g)",g:126}]),
+  culturalFood(200021,"Extra Firm Tofu","Soy protein",154,17.3,2.8,9,2.4,0.7,[{name:"100g",g:100},{name:"1/2 block (126g)",g:126}]),
+  culturalFood(200022,"Silken Tofu","Soy protein",55,4.8,1.9,2.7,0.2,0.7,[{name:"100g",g:100},{name:"1/2 cup (124g)",g:124}]),
+  culturalFood(200023,"Tempeh","Soy protein",193,20.3,7.6,10.8,1.4,0,[{name:"100g",g:100},{name:"3 oz (85g)",g:85}]),
+  culturalFood(200024,"Edamame (shelled cooked)","Soybean",122,11.9,8.9,5.2,5.2,2.2,[{name:"100g",g:100},{name:"1/2 cup (78g)",g:78}]),
+  culturalFood(200025,"Miso Paste","Japanese ingredient",198,12.8,26.5,6,5.4,6.2,[{name:"100g",g:100},{name:"1 tbsp (17g)",g:17}]),
+  culturalFood(200026,"Seitan","Wheat protein",370,75,14,1.9,1.2,0,[{name:"100g",g:100},{name:"3 oz (85g)",g:85}]),
+  culturalFood(200027,"Fish Balls","Asian seafood",160,12,17,5,0.5,2,[{name:"100g",g:100},{name:"5 pieces (85g)",g:85}]),
+  culturalFood(200028,"Shrimp Paste","Southeast Asian condiment",100,20,3,1.5,0,0,[{name:"100g",g:100},{name:"1 tsp (5g)",g:5}]),
+  culturalFood(200029,"Lap Cheong Chinese Sausage","Chinese ingredient",455,21,14,36,0,10,[{name:"100g",g:100},{name:"1 link (40g)",g:40}]),
+  // ── Asian: vegetables, herbs, mushrooms, seaweed ────────────────────────
+  culturalFood(200040,"Bok Choy","Asian vegetable",13,1.5,2.2,0.2,1,1.2,[{name:"100g",g:100},{name:"1 cup chopped (70g)",g:70}]),
+  culturalFood(200041,"Napa Cabbage","Asian vegetable",16,1.2,3.2,0.2,1.2,1.4,[{name:"100g",g:100},{name:"1 cup shredded (76g)",g:76}]),
+  culturalFood(200042,"Chinese Broccoli (gai lan)","Asian vegetable",26,1.2,4.7,0.8,2.6,1.2,[{name:"100g",g:100},{name:"1 cup cooked (88g)",g:88}]),
+  culturalFood(200043,"Bean Sprouts","Asian vegetable",30,3,5.9,0.2,1.8,4.1,[{name:"100g",g:100},{name:"1 cup (104g)",g:104}]),
+  culturalFood(200044,"Daikon Radish","Asian vegetable",18,0.6,4.1,0.1,1.6,2.5,[{name:"100g",g:100},{name:"1 cup sliced (116g)",g:116}]),
+  culturalFood(200045,"Lotus Root","Asian vegetable",74,2.6,17.2,0.1,4.9,0.5,[{name:"100g",g:100},{name:"1 cup slices (120g)",g:120}]),
+  culturalFood(200046,"Bamboo Shoots","Asian vegetable",27,2.6,5.2,0.3,2.2,3,[{name:"100g",g:100},{name:"1 cup (151g)",g:151}]),
+  culturalFood(200047,"Water Chestnuts","Asian vegetable",97,1.4,23.9,0.1,3,4.8,[{name:"100g",g:100},{name:"1/2 cup sliced (62g)",g:62}]),
+  culturalFood(200048,"Chinese Eggplant","Asian vegetable",25,1,6,0.2,3,3.5,[{name:"100g",g:100},{name:"1 cup cubed (82g)",g:82}]),
+  culturalFood(200049,"Thai Basil","Asian herb",23,3.2,2.7,0.6,1.6,0.3,[{name:"100g",g:100},{name:"1/4 cup (10g)",g:10}]),
+  culturalFood(200050,"Lemongrass","Asian herb",99,1.8,25.3,0.5,0,0,[{name:"100g",g:100},{name:"1 stalk (20g)",g:20}]),
+  culturalFood(200051,"Galangal","Asian aromatics",71,1,15,0.8,2,0,[{name:"100g",g:100},{name:"1 tbsp sliced (6g)",g:6}]),
+  culturalFood(200052,"Shiitake Mushrooms","Asian mushroom",34,2.2,6.8,0.5,2.5,2.4,[{name:"100g",g:100},{name:"1 cup sliced (145g)",g:145}]),
+  culturalFood(200053,"Enoki Mushrooms","Asian mushroom",37,2.7,7.8,0.3,2.7,0.2,[{name:"100g",g:100},{name:"1 cup (65g)",g:65}]),
+  culturalFood(200054,"King Oyster Mushrooms","Asian mushroom",35,3,6,0.4,2.4,1.1,[{name:"100g",g:100},{name:"1 cup sliced (86g)",g:86}]),
+  culturalFood(200055,"Wood Ear Mushrooms","Asian mushroom",25,0.5,6.8,0.1,5.1,0,[{name:"100g",g:100},{name:"1 cup (99g)",g:99}]),
+  culturalFood(200056,"Nori Seaweed Sheets","Japanese ingredient",306,41,44,4,31,0.5,[{name:"100g",g:100},{name:"1 sheet (3g)",g:3}]),
+  culturalFood(200057,"Wakame Seaweed (rehydrated)","Japanese ingredient",45,3,9,0.6,0.5,0.7,[{name:"100g",g:100},{name:"1/2 cup (40g)",g:40}]),
+  culturalFood(200058,"Kimchi","Korean side",21,1.1,4,0.5,1.6,1.1,[{name:"100g",g:100},{name:"1/2 cup (75g)",g:75}]),
+  culturalFood(200059,"Pickled Ginger","Japanese condiment",80,0.2,18,0.4,2,12,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  // ── Asian: sauces & pantry ───────────────────────────────────────────────
+  culturalFood(200070,"Soy Sauce","Asian sauce",53,8.1,4.9,0.6,0.8,0.4,[{name:"100g",g:100},{name:"1 tbsp (16g)",g:16}]),
+  culturalFood(200071,"Tamari","Asian sauce",60,10,5.6,0.1,0.8,1,[{name:"100g",g:100},{name:"1 tbsp (18g)",g:18}]),
+  culturalFood(200072,"Fish Sauce","Southeast Asian sauce",35,5,3.6,0,0,3.6,[{name:"100g",g:100},{name:"1 tbsp (18g)",g:18}]),
+  culturalFood(200073,"Oyster Sauce","Asian sauce",51,1.4,11,0.3,0.3,4.9,[{name:"100g",g:100},{name:"1 tbsp (18g)",g:18}]),
+  culturalFood(200074,"Hoisin Sauce","Chinese sauce",220,3.3,44,3.4,2.8,27,[{name:"100g",g:100},{name:"1 tbsp (16g)",g:16}]),
+  culturalFood(200075,"Sriracha Sauce","Thai-style sauce",93,1.9,19,0.9,1.9,15,[{name:"100g",g:100},{name:"1 tsp (5g)",g:5}]),
+  culturalFood(200076,"Gochujang","Korean chili paste",214,5,44,2.6,3,22,[{name:"100g",g:100},{name:"1 tbsp (18g)",g:18}]),
+  culturalFood(200077,"Gochugaru Korean Chili Flakes","Korean spice",318,12,56,17,27,10,[{name:"100g",g:100},{name:"1 tbsp (5g)",g:5}]),
+  culturalFood(200078,"Sambal Oelek","Indonesian chili paste",61,2,13,0.8,2,5,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  culturalFood(200079,"Thai Red Curry Paste","Thai ingredient",150,4,18,7,4,8,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  culturalFood(200080,"Thai Green Curry Paste","Thai ingredient",140,4,17,7,4,6,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  culturalFood(200081,"Coconut Milk (canned)","Asian/Latin pantry",197,2,3,21,2.2,2.8,[{name:"100g",g:100},{name:"1/2 cup (120g)",g:120}]),
+  culturalFood(200082,"Light Coconut Milk","Asian/Latin pantry",72,0.7,2,7,0.7,1.4,[{name:"100g",g:100},{name:"1/2 cup (120g)",g:120}]),
+  culturalFood(200083,"Sesame Oil","Asian oil",884,0,0,100,0,0,[{name:"100g",g:100},{name:"1 tbsp (14g)",g:14},{name:"1 tsp (5g)",g:5}]),
+  culturalFood(200084,"Rice Vinegar","Asian condiment",18,0,0.1,0,0,0.1,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  culturalFood(200085,"Mirin","Japanese condiment",241,0,43,0,0,32,[{name:"100g",g:100},{name:"1 tbsp (18g)",g:18}]),
+  culturalFood(200086,"Furikake","Japanese seasoning",385,16,42,16,12,8,[{name:"100g",g:100},{name:"1 tbsp (6g)",g:6}]),
+  culturalFood(200087,"Panko Breadcrumbs","Japanese ingredient",395,13,72,5,4,6,[{name:"100g",g:100},{name:"1/2 cup (30g)",g:30}]),
+  // ── Latin/Hispanic: grains, beans, tortillas ─────────────────────────────
+  culturalFood(201001,"Corn Tortilla","Mexican staple",218,5.7,45,2.9,6.3,0.6,[{name:"100g",g:100},{name:"1 tortilla (25g)",g:25},{name:"2 tortillas (50g)",g:50}]),
+  culturalFood(201002,"Flour Tortilla","Mexican staple",313,8.2,52,8,2.8,2.5,[{name:"100g",g:100},{name:"1 medium (45g)",g:45}]),
+  culturalFood(201003,"Masa Harina","Mexican ingredient",365,9,77,4,7,1,[{name:"100g",g:100},{name:"1/4 cup (30g)",g:30}]),
+  culturalFood(201004,"Hominy (canned drained)","Mexican ingredient",72,1.5,14,1,2.5,1,[{name:"100g",g:100},{name:"1/2 cup (124g)",g:124}]),
+  culturalFood(201005,"White Corn Posole","Mexican ingredient",72,1.5,14,1,2.5,1,[{name:"100g",g:100},{name:"1 cup (165g)",g:165}]),
+  culturalFood(201006,"Mexican Rice (cooked)","Latin side",132,2.5,25,2.7,1.2,1.2,[{name:"100g",g:100},{name:"1 cup (186g)",g:186}]),
+  culturalFood(201007,"Spanish Rice (cooked)","Latin side",132,2.5,25,2.7,1.2,1.2,[{name:"100g",g:100},{name:"1 cup (186g)",g:186}]),
+  culturalFood(201008,"Arroz con Gandules","Puerto Rican side",165,5,28,4,4,1,[{name:"100g",g:100},{name:"1 cup (190g)",g:190}]),
+  culturalFood(201009,"Sofrito","Latin cooking base",45,1,6,2,1.5,3,[{name:"100g",g:100},{name:"2 tbsp (30g)",g:30}]),
+  culturalFood(201010,"Refried Beans","Mexican side",91,5,15,2,5,0.5,[{name:"100g",g:100},{name:"1/2 cup (130g)",g:130}]),
+  culturalFood(201011,"Pinto Beans (cooked)","Latin staple",143,9,26,0.7,9,0.3,[{name:"100g",g:100},{name:"1/2 cup (86g)",g:86}]),
+  culturalFood(201012,"Black Beans (cooked)","Latin staple",132,8.9,23.7,0.5,8.7,0.3,[{name:"100g",g:100},{name:"1/2 cup (86g)",g:86}]),
+  culturalFood(201013,"Peruvian Beans (cooked)","Latin staple",145,9,27,0.6,8.5,0.5,[{name:"100g",g:100},{name:"1/2 cup (86g)",g:86}]),
+  culturalFood(201014,"Mayocoba Beans (cooked)","Latin staple",145,9,27,0.6,8.5,0.5,[{name:"100g",g:100},{name:"1/2 cup (86g)",g:86}]),
+  culturalFood(201015,"Lentils (cooked)","Latin pantry",116,9,20,0.4,7.9,1.8,[{name:"100g",g:100},{name:"1/2 cup (99g)",g:99}]),
+  culturalFood(201016,"Chickpeas Garbanzos (cooked)","Latin pantry",164,8.9,27.4,2.6,7.6,4.8,[{name:"100g",g:100},{name:"1/2 cup (82g)",g:82}]),
+  // ── Latin/Hispanic: produce & peppers ────────────────────────────────────
+  culturalFood(201030,"Tomatillo","Mexican vegetable",32,1,5.8,1,1.9,3.9,[{name:"100g",g:100},{name:"1 medium (34g)",g:34}]),
+  culturalFood(201031,"Poblano Pepper","Mexican pepper",20,1,4.6,0.2,1.7,2.4,[{name:"100g",g:100},{name:"1 pepper (64g)",g:64}]),
+  culturalFood(201032,"Jalapeno Pepper","Mexican pepper",29,0.9,6.5,0.4,2.8,4.1,[{name:"100g",g:100},{name:"1 pepper (14g)",g:14}]),
+  culturalFood(201033,"Serrano Pepper","Mexican pepper",32,1.7,6.7,0.4,3.7,3.8,[{name:"100g",g:100},{name:"1 pepper (6g)",g:6}]),
+  culturalFood(201034,"Habanero Pepper","Latin pepper",40,1.9,8.8,0.4,1.5,5.3,[{name:"100g",g:100},{name:"1 pepper (7g)",g:7}]),
+  culturalFood(201035,"Anaheim Pepper","Mexican pepper",21,0.9,5,0.2,1.7,2.4,[{name:"100g",g:100},{name:"1 pepper (75g)",g:75}]),
+  culturalFood(201036,"Dried Ancho Chile","Mexican chile",281,11.9,51.4,8.2,21.6,7.2,[{name:"100g",g:100},{name:"1 chile (17g)",g:17}]),
+  culturalFood(201037,"Dried Guajillo Chile","Mexican chile",281,12,51,8,22,7,[{name:"100g",g:100},{name:"1 chile (9g)",g:9}]),
+  culturalFood(201038,"Dried Arbol Chile","Mexican chile",318,12,57,17,27,10,[{name:"100g",g:100},{name:"1 chile (1g)",g:1}]),
+  culturalFood(201039,"Nopales Cactus Pads","Mexican vegetable",16,1.3,3.3,0.1,2.2,1.1,[{name:"100g",g:100},{name:"1 cup sliced (86g)",g:86}]),
+  culturalFood(201040,"Chayote Squash","Latin vegetable",19,0.8,4.5,0.1,1.7,1.7,[{name:"100g",g:100},{name:"1 cup (132g)",g:132}]),
+  culturalFood(201041,"Jicama","Mexican vegetable",38,0.7,8.8,0.1,4.9,1.8,[{name:"100g",g:100},{name:"1 cup sliced (130g)",g:130}]),
+  culturalFood(201042,"Yucca Cassava (boiled)","Latin root",112,1.4,27.5,0.3,1.8,1.4,[{name:"100g",g:100},{name:"1 cup (206g)",g:206}]),
+  culturalFood(201043,"Green Plantain (cooked)","Latin staple",122,1.3,31.9,0.4,2.3,14,[{name:"100g",g:100},{name:"1 cup slices (154g)",g:154}]),
+  culturalFood(201044,"Sweet Plantain (fried)","Latin side",236,1.6,35,11,2.3,14,[{name:"100g",g:100},{name:"1/2 cup (80g)",g:80}]),
+  culturalFood(201045,"Tostones","Latin side",250,1.5,36,12,2.5,1,[{name:"100g",g:100},{name:"4 pieces (80g)",g:80}]),
+  culturalFood(201046,"Calabacita Squash","Mexican vegetable",17,1.2,3.1,0.3,1,2.2,[{name:"100g",g:100},{name:"1 cup sliced (113g)",g:113}]),
+  culturalFood(201047,"Mexican Street Corn (elote)","Latin side",190,5,22,10,2.5,6,[{name:"100g",g:100},{name:"1 ear prepared (150g)",g:150}]),
+  culturalFood(201048,"Roasted Corn Kernels","Latin ingredient",96,3.4,21,1.5,2.4,4.5,[{name:"100g",g:100},{name:"1/2 cup (82g)",g:82}]),
+  // ── Latin/Hispanic: sauces, cheese, sweets ───────────────────────────────
+  culturalFood(201060,"Salsa Roja","Mexican salsa",36,1.5,7,0.4,1.8,4,[{name:"100g",g:100},{name:"2 tbsp (32g)",g:32}]),
+  culturalFood(201061,"Salsa Verde","Mexican salsa",32,1,6,0.5,1.6,3.5,[{name:"100g",g:100},{name:"2 tbsp (32g)",g:32}]),
+  culturalFood(201062,"Pico de Gallo","Mexican salsa",25,1,5,0.2,1.4,3,[{name:"100g",g:100},{name:"1/4 cup (60g)",g:60}]),
+  culturalFood(201063,"Guacamole","Mexican side",167,2,8.6,15,6.8,0.5,[{name:"100g",g:100},{name:"1/4 cup (60g)",g:60}]),
+  culturalFood(201064,"Mole Poblano Sauce","Mexican sauce",190,4,22,10,4,8,[{name:"100g",g:100},{name:"1/4 cup (65g)",g:65}]),
+  culturalFood(201065,"Adobo Sauce","Latin sauce",80,2,12,3,3,5,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  culturalFood(201066,"Chipotle Peppers in Adobo","Mexican ingredient",90,2,13,3,3,6,[{name:"100g",g:100},{name:"1 pepper (10g)",g:10}]),
+  culturalFood(201067,"Achiote Paste","Latin seasoning",267,6,48,7,14,5,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  culturalFood(201068,"Recaito","Latin cooking base",40,1,5,2,1.5,2,[{name:"100g",g:100},{name:"2 tbsp (30g)",g:30}]),
+  culturalFood(201069,"Queso Fresco","Mexican cheese",299,18,2.5,24,0,2.5,[{name:"100g",g:100},{name:"1 oz (28g)",g:28}]),
+  culturalFood(201070,"Cotija Cheese","Mexican cheese",366,20,4,30,0,1,[{name:"100g",g:100},{name:"1 tbsp crumbled (7g)",g:7},{name:"1 oz (28g)",g:28}]),
+  culturalFood(201071,"Oaxaca Cheese","Mexican cheese",316,22,2,24,0,1,[{name:"100g",g:100},{name:"1 oz (28g)",g:28}]),
+  culturalFood(201072,"Mexican Crema","Mexican dairy",250,2.7,4,25,0,3.4,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  culturalFood(201073,"Dulce de Leche","Latin sweet",315,6.8,55,7,0,50,[{name:"100g",g:100},{name:"1 tbsp (19g)",g:19}]),
+  culturalFood(201074,"Piloncillo","Mexican sweetener",375,0,100,0,0,100,[{name:"100g",g:100},{name:"1 tbsp grated (12g)",g:12}]),
+  culturalFood(201075,"Tamarind Paste","Latin/Asian ingredient",239,2.8,63,0.6,5.1,57,[{name:"100g",g:100},{name:"1 tbsp (15g)",g:15}]),
+  // ── Latin/Hispanic: cooked dishes ────────────────────────────────────────
+  culturalFood(201090,"Carne Asada","Mexican beef",220,26,2,12,0,0.5,[{name:"100g",g:100},{name:"3 oz (85g)",g:85}]),
+  culturalFood(201091,"Al Pastor Pork","Mexican pork",240,21,6,15,0.8,4,[{name:"100g",g:100},{name:"3 oz (85g)",g:85}]),
+  culturalFood(201092,"Carnitas","Mexican pork",290,25,0,21,0,0,[{name:"100g",g:100},{name:"3 oz (85g)",g:85}]),
+  culturalFood(201093,"Barbacoa Beef","Mexican beef",215,26,2,11,0.4,0.5,[{name:"100g",g:100},{name:"3 oz (85g)",g:85}]),
+  culturalFood(201094,"Chicken Tinga","Mexican chicken",150,18,4,7,1,2,[{name:"100g",g:100},{name:"1/2 cup (120g)",g:120}]),
+  culturalFood(201095,"Picadillo","Latin ground beef",190,14,10,11,2,3,[{name:"100g",g:100},{name:"1/2 cup (120g)",g:120}]),
+  culturalFood(201096,"Ropa Vieja","Cuban beef",160,20,6,6,1,3,[{name:"100g",g:100},{name:"1/2 cup (120g)",g:120}]),
+  culturalFood(201097,"Pernil Roast Pork","Puerto Rican pork",260,27,1,16,0,0,[{name:"100g",g:100},{name:"3 oz (85g)",g:85}]),
+  culturalFood(201098,"Ceviche","Latin seafood",95,15,5,1.5,1,2,[{name:"100g",g:100},{name:"1 cup (220g)",g:220}]),
+  culturalFood(201099,"Pozole Rojo","Mexican soup",90,7,10,3,2,2,[{name:"100g",g:100},{name:"1 bowl (400g)",g:400}]),
+  culturalFood(201100,"Menudo","Mexican soup",85,8,6,3,1,1,[{name:"100g",g:100},{name:"1 bowl (400g)",g:400}]),
+  culturalFood(201101,"Tamale (pork)","Mexican dish",220,8,24,11,3,1,[{name:"100g",g:100},{name:"1 tamale (142g)",g:142}]),
+  culturalFood(201102,"Empanada (beef baked)","Latin dish",285,10,30,14,2,2,[{name:"100g",g:100},{name:"1 empanada (100g)",g:100}]),
+  culturalFood(201103,"Arepa","Latin corn cake",219,5,43,3,3,1,[{name:"100g",g:100},{name:"1 arepa (100g)",g:100}]),
+  culturalFood(201104,"Pupusa (bean and cheese)","Salvadoran dish",240,9,34,8,5,1,[{name:"100g",g:100},{name:"1 pupusa (120g)",g:120}]),
+  culturalFood(201105,"Tostada Shell","Mexican ingredient",474,7,65,22,6,1,[{name:"100g",g:100},{name:"1 shell (12g)",g:12}]),
+];
+
+// ══════════════════════════════════
 // APP STATE
 // ══════════════════════════════════
 let GOALS = { cal: 2000, protein: 150, carbs: 200, fat: 65, fiber: 30, water: 8, weight: 70 };
@@ -4616,6 +4785,10 @@ let customFoods = [];
 let recipeIngredients = [];
 let activeMealTarget = null;
 let currentFoodForDetail = null;
+let webFoodResults = [];
+let webFoodCache = {};
+let foodSearchToken = 0;
+let foodSearchTimer = null;
 let isAddingRecipeIngredient = false;
 let scanData = null;
 let progPeriod = 7;
@@ -4881,12 +5054,15 @@ function renderSavedRecipes() {
     return;
   }
   el.innerHTML = recipes.map((r, i) => `
-    <div class="saved-recipe-item" onclick="loadRecipe(${i})">
-      <div>
+    <div class="saved-recipe-item">
+      <div style="flex:1;min-width:0" onclick="loadRecipe(${i})" style="cursor:pointer">
         <div class="saved-recipe-name">${r.name}</div>
-        <div class="saved-recipe-info">${r.servings} servings · ${r.ingredients.length} ingredients</div>
+        <div class="saved-recipe-info">${r.servings} serving${r.servings!==1?'s':''} · ${r.ingredients.length} ingredient${r.ingredients.length!==1?'s':''} · ${r.totalCal} cal total</div>
       </div>
-      <div class="saved-recipe-cals">${r.totalCal} cal</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button onclick="loadRecipe(${i})" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Edit</button>
+        <button onclick="deleteRecipe(${i})" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">✕</button>
+      </div>
     </div>`).join('');
 }
 
@@ -4913,25 +5089,103 @@ function openAddIngredient() {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-function searchFoods(q) { renderFoodResults(q); }
+// ── Web food search helpers ───────────────────────────────────────────────────
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function getAllSearchFoods() { return [...FOODS, ...CULTURAL_FOODS, ...(window.FOODS_EXTENDED||[]), ...customFoods, ...webFoodResults]; }
+function makeFoodKey(food) { return `${(food.name||'').toLowerCase()}|${(food.brand||'').toLowerCase()}|${Math.round(food.cal||0)}`; }
+function scoreFoodSearch(food, query) {
+  const name = (food.name||'').toLowerCase(), brand = (food.brand||'').toLowerCase();
+  if (!query) return 0;
+  let score = 0;
+  if (name === query) score += 120;
+  if (name.startsWith(query)) score += 80;
+  if (name.includes(query)) score += 45;
+  if (brand.includes(query)) score += 15;
+  query.split(/\s+/).filter(w=>w.length>1).forEach(w => { if(name.includes(w)) score+=12; if(brand.includes(w)) score+=4; });
+  return score;
+}
+function normalizeOFFFood(product, fallbackName, index) {
+  const n = product.nutriments || {};
+  const cal = Math.round(n['energy-kcal_100g'] ?? ((n['energy_100g']??0)/4.184));
+  if (!Number.isFinite(cal) || cal <= 0) return null;
+  const sodiumPct   = Math.round(((n['sodium_100g']??0)/2.3)*100);
+  const calciumPct  = Math.round(((n['calcium_100g']??0)/1.3)*100);
+  const ironPct     = Math.round(((n['iron_100g']??0)/0.018)*100);
+  const potassiumPct= Math.round(((n['potassium_100g']??0)/4.7)*100);
+  return {
+    id: 800000 + index + Math.abs((product.code||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0)),
+    source: 'web', offCode: product.code||'',
+    name: product.product_name || fallbackName, brand: product.brands || 'Open Food Facts',
+    cal, protein: +(n['proteins_100g']??0).toFixed(1), carbs: +(n['carbohydrates_100g']??0).toFixed(1),
+    fat: +(n['fat_100g']??0).toFixed(1), fiber: +(n['fiber_100g']??0).toFixed(1), sugar: +(n['sugars_100g']??0).toFixed(1),
+    vitA:0,vitC:0,vitD:0,vitE:0,vitK:0,vitB1:0,vitB2:0,vitB3:0,vitB6:0,vitB12:0,folate:0,
+    calcium: Number.isFinite(calciumPct)?calciumPct:0, iron: Number.isFinite(ironPct)?ironPct:0,
+    magnesium:0, potassium: Number.isFinite(potassiumPct)?potassiumPct:0,
+    sodium: Number.isFinite(sodiumPct)?sodiumPct:0, zinc:0,
+    servings:[{name:"100g",g:100},{name:"1 oz (28g)",g:28},{name:"1 serving (50g)",g:50}]
+  };
+}
+async function fetchFoodSearchFromOFF(query, token) {
+  const clean = query.trim();
+  if (clean.length < 2) return [];
+  if (webFoodCache[clean]) return webFoodCache[clean];
+  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(clean)}&action=process&json=1&page_size=24&fields=code,product_name,brands,nutriments&sort_by=unique_scans_n`;
+  try {
+    const resp = await fetch(url, { signal: AbortSignal.timeout(9000) });
+    if (!resp.ok) throw new Error('OFF error');
+    const data = await resp.json();
+    if (token !== foodSearchToken) return [];
+    const seen = new Set();
+    const foods = (data.products||[]).map((p,i)=>normalizeOFFFood(p,clean,i)).filter(Boolean).filter(f=>{
+      const k=makeFoodKey(f); if(seen.has(k)) return false; seen.add(k); return true;
+    }).slice(0,18);
+    webFoodCache[clean] = foods;
+    return foods;
+  } catch { return []; }
+}
 
-function renderFoodResults(q) {
+function searchFoods(q) {
+  const query = q.toLowerCase().trim();
+  foodSearchToken += 1;
+  const token = foodSearchToken;
+  renderFoodResults(q, { searching: query.length >= 2 });
+  clearTimeout(foodSearchTimer);
+  if (query.length < 2) { webFoodResults = []; return; }
+  foodSearchTimer = setTimeout(async () => {
+    const foods = await fetchFoodSearchFromOFF(query, token);
+    if (token !== foodSearchToken) return;
+    const existing = new Set([...FOODS, ...CULTURAL_FOODS, ...customFoods].map(makeFoodKey));
+    webFoodResults = foods.filter(f => !existing.has(makeFoodKey(f)));
+    renderFoodResults(document.getElementById('foodSearch').value, { searched: true });
+  }, 450);
+}
+
+function renderFoodResults(q, state = {}) {
   const el = document.getElementById('foodResults');
   const query = q.toLowerCase().trim();
-  const all = [...FOODS, ...customFoods];
-  const results = query ? all.filter(f => f.name.toLowerCase().includes(query) || (f.brand && f.brand.toLowerCase().includes(query))) : all;
+  const all = getAllSearchFoods();
+  let results = query
+    ? all.filter(f => scoreFoodSearch(f,query)>0).sort((a,b)=>scoreFoodSearch(b,query)-scoreFoodSearch(a,query))
+    : all.filter(f => !f.source || f.source !== 'web');
+  const localCount = results.filter(f=>!f.source||f.source!=='web').length;
+  const webCount   = results.filter(f=>f.source==='web').length;
+  const status = query
+    ? `<div class="food-search-status">${state.searching ? 'Searching local foods and web databases…' : `${localCount} local result${localCount!==1?'s':''}${webCount?` · ${webCount} web result${webCount!==1?'s':''}`:state.searched?' · no web matches yet':''}`}</div>`
+    : `<div class="food-search-status">${(FOODS.length+CULTURAL_FOODS.length+(window.FOODS_EXTENDED?.length||0)).toLocaleString()} built-in foods · ${customFoods.length} custom · web lookup starts when you type</div>`;
   if (results.length === 0) {
-    el.innerHTML = '<div class="no-results">No foods found. Try a different search.</div>';
+    el.innerHTML = status + '<div class="no-results">No foods found yet. Try a simpler name like "banana", "chicken", or "cheerios".</div>';
     return;
   }
-  el.innerHTML = results.slice(0, 50).map(f => {
-    const s = f.servings[0];
-    const n = calcFood(f, s.g);
-    const badge = f.id >= 10000 ? ' <span style="font-size:10px;color:var(--green);font-weight:700;margin-left:4px">CUSTOM</span>' : '';
+  el.innerHTML = status + results.slice(0,70).map(f => {
+    const s = f.servings[0], n = calcFood(f, s.g);
+    const src = f.source==='web'?'WEB':f.id>=10000?'CUSTOM':'LOCAL';
+    const cls = f.source==='web'?'food-source-web':f.id>=10000?'food-source-custom':'food-source-local';
     return `<div class="food-result" onclick="openFoodDetail(${f.id})">
         <div class="food-result-left">
-          <div class="food-result-name">${f.name}${badge}</div>
-          <div class="food-result-detail">${f.brand} · ${s.name} · P:${n.protein}g C:${n.carbs}g F:${n.fat}g</div>
+          <div class="food-result-name">${escapeHTML(f.name)}<span class="food-source-badge ${cls}">${src}</span></div>
+          <div class="food-result-detail">${escapeHTML(f.brand)} · ${escapeHTML(s.name)} · P:${n.protein}g C:${n.carbs}g F:${n.fat}g</div>
         </div>
         <div class="food-result-cals">${n.cal}</div>
       </div>`;
@@ -4939,7 +5193,7 @@ function renderFoodResults(q) {
 }
 
 function openFoodDetail(foodId) {
-  const food = [...FOODS, ...customFoods].find(f => f.id === foodId);
+  const food = getAllSearchFoods().find(f => f.id === foodId);
   if (!food) return;
   currentFoodForDetail = food;
   closeModal('foodModal');
@@ -5188,16 +5442,32 @@ function saveRecipeToDiary() {
   if (existing >= 0) recipes[existing] = recipeData;
   else recipes.push(recipeData);
 
-  // Add to today's diary
+  // Add to today's diary under selected meal
   const day = getDay();
-  day.meals.snacks.push({
+  const mealTarget = document.getElementById('recipeMealTarget')?.value || 'snacks';
+  day.meals[mealTarget].push({
     name: `${name} (${Math.round(pct * 100)}%)`,
     servingLabel: `${Math.round(pct * 100)}% of recipe (${servings} servings total)`,
     ...portion
   });
 
   renderAll();
-  showToast('✅ Added to today\'s diary!');
+  const mealName = MEALS.find(m => m.id === mealTarget)?.name || 'Diary';
+  showToast(`✅ Added to ${mealName}!`);
+}
+
+function newRecipe() {
+  if (recipeIngredients.length > 0 || document.getElementById('recipeName').value.trim()) {
+    if (!confirm('Start a new recipe? Current unsaved ingredients will be cleared.')) return;
+  }
+  document.getElementById('recipeName').value = '';
+  document.getElementById('recipeServings').value = 4;
+  recipeIngredients = [];
+  renderRecipeIngredients();
+  updateRecipeTotals();
+  document.getElementById('recipeName').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('✦ New recipe started!');
 }
 
 function loadRecipe(idx) {
@@ -5207,9 +5477,18 @@ function loadRecipe(idx) {
   recipeIngredients = [...r.ingredients];
   renderRecipeIngredients();
   updateRecipeTotals();
-  showSection('recipes', document.querySelectorAll('.tab')[2]);
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===2));
+  showSection('recipes');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(`📂 Loaded "${r.name}"`);
+}
+
+function deleteRecipe(idx) {
+  const r = recipes[idx];
+  if (!confirm(`Delete "${r.name}"?`)) return;
+  recipes.splice(idx, 1);
+  saveState();
+  renderSavedRecipes();
+  showToast('🗑 Recipe deleted');
 }
 
 // ══════════════════════════════════
