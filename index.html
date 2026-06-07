@@ -273,9 +273,10 @@
   .water-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .water-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
   .water-amount { font-size: 13px; color: var(--text2); }
-  .water-cups { display: flex; gap: 6px; flex-wrap: wrap; }
+  .water-cups { display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .water-cups::-webkit-scrollbar { display: none; }
   .water-cup {
-    width: 36px; height: 44px;
+    width: 36px; height: 40px; flex-shrink: 0;
     background: var(--bg3); border: 1.5px solid var(--border);
     border-radius: 8px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
@@ -913,8 +914,8 @@
   }
 
   /* ── Fitness Section ── */
-  .fitness-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-  .fitness-header h2 { font-size: 18px; font-weight: 700; margin: 0; }
+  .fitness-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
+  .fitness-header h2 { font-size: 18px; font-weight: 700; margin: 0; flex-shrink: 0; }
   .add-exercise-btn { background: var(--accent); color: white; border: none; border-radius: 20px;
     padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .add-exercise-btn:hover { opacity: .9; }
@@ -1064,6 +1065,14 @@
     margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
   .sync-clear-btn { color: var(--red); background: none; border: none; font-size: 12px; cursor: pointer; }
   .sync-clear-btn:hover { text-decoration: underline; }
+  /* Sync profile / login UI */
+  .sync-tab-row { display:flex;gap:4px;margin-bottom:16px;background:var(--bg3);padding:4px;border-radius:10px; }
+  .sync-tab { flex:1;padding:8px 4px;background:none;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text3);transition:all .15s; }
+  .sync-tab.active { background:var(--bg2);color:var(--accent2);box-shadow:0 1px 4px rgba(0,0,0,.15); }
+  .sync-profile-header { display:flex;align-items:center;gap:12px;padding:12px;
+    background:color-mix(in srgb,var(--accent) 8%,transparent);
+    border-radius:var(--radius-sm);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);margin-bottom:14px; }
+  .sync-action-grid { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px; }
 
   /* ── Workout Import Modal ── */
   .import-workout-btn {
@@ -1073,7 +1082,16 @@
     cursor: pointer; transition: all .15s; white-space: nowrap;
   }
   .import-workout-btn:hover { background: linear-gradient(135deg, rgba(34,211,165,.25), rgba(56,189,248,.25)); }
-  .fitness-header-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .fitness-header-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+  @media (max-width: 480px) {
+    .fitness-header { flex-direction: column; align-items: flex-start; }
+    .fitness-header-btns { width: 100%; }
+    .import-workout-btn, .add-exercise-btn { flex: 1; text-align: center; justify-content: center; }
+    .calorie-ring-card { padding: 14px 12px; }
+    .ring-wrap { width: 140px; height: 140px; }
+    .ring-cals { font-size: 24px; }
+    .sync-btn-text { display: none; }
+  }
   .ex-distance-row {
     display: flex; align-items: center; gap: 10px;
     background: var(--bg3); border-radius: 10px; padding: 12px; margin-bottom: 10px;
@@ -1245,7 +1263,7 @@
       <button class="cust-btn" onclick="openCustModal()" title="Customize">🎨</button>
       <button class="sync-btn" id="syncBtn" onclick="openSyncModal()" title="Sync">
         <div class="sync-dot" id="syncDot"></div>
-        <span id="syncBtnLabel">Sync</span>
+        <span id="syncBtnLabel" class="sync-btn-text">Sync</span>
       </button>
     </div>
   </div>
@@ -1558,23 +1576,38 @@
     </div>
     <div class="modal-body" style="padding:16px;overflow-y:auto">
 
+      <!-- Product name (cache key) -->
+      <div class="sync-modal-section" style="margin-bottom:10px">
+        <div class="sync-modal-label">Product Name <span style="font-weight:400;text-transform:none">(used to cache results — type to recall instantly)</span></div>
+        <input class="sync-modal-input" id="scanProductName" type="text" placeholder="e.g. Chobani Greek Yogurt, Clif Bar">
+      </div>
+
+      <!-- API Key (collapsible, only shown first time) -->
+      <details id="scanApiDetails" style="margin-bottom:10px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--text3);padding:4px 0;user-select:none">🔑 Claude API Key (only needed first time per product)</summary>
+        <div style="margin-top:8px">
+          <input class="sync-modal-input" id="scanApiKey" type="password" placeholder="sk-ant-…">
+          <div class="sync-modal-hint">Stored in your browser. API is called once per product, then results are cached forever.</div>
+        </div>
+      </details>
+
       <!-- Upload area -->
       <div class="scan-upload-area" id="scanUploadArea" onclick="document.getElementById('scanFileInput').click()">
         <div class="scan-upload-icon">📸</div>
         <div class="scan-upload-text">Tap to take photo or choose image</div>
-        <div class="scan-upload-sub">JPG, PNG, HEIC supported</div>
+        <div class="scan-upload-sub">JPG, PNG, HEIC · photo of nutrition label</div>
         <input type="file" id="scanFileInput" accept="image/*" capture="environment" style="display:none" onchange="handleScanFile(this)">
       </div>
 
       <!-- Preview -->
       <div id="scanPreviewWrap" style="display:none;margin-top:12px">
-        <img id="scanPreview" style="width:100%;border-radius:10px;border:1px solid var(--border);max-height:300px;object-fit:contain">
+        <img id="scanPreview" style="width:100%;border-radius:10px;border:1px solid var(--border);max-height:280px;object-fit:contain">
         <button class="scan-change-btn" onclick="document.getElementById('scanFileInput').click()">Change Image</button>
       </div>
 
       <!-- Analyze button -->
       <button class="scan-analyze-btn" id="scanAnalyzeBtn" onclick="analyzeLabel()" style="display:none">
-        <span id="scanBtnText">📷 Read Label</span>
+        <span id="scanBtnText">🤖 Read Label with Claude</span>
       </button>
 
       <!-- Status / Error -->
@@ -1582,7 +1615,7 @@
 
       <!-- Results -->
       <div id="scanResults" style="display:none">
-        <div class="scan-result-header">Label Detected!</div>
+        <div class="scan-result-header">✅ Label Read!</div>
         <div class="scan-result-preview" id="scanResultPreview"></div>
         <button class="add-to-diary-btn" onclick="applyScanResults()" style="margin-top:12px">Use This Food →</button>
       </div>
@@ -1732,38 +1765,140 @@
 <div class="modal-overlay" id="syncModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">☁ GitHub Gist Sync</div>
+      <div class="modal-title">☁ Sync &amp; Profile</div>
       <button class="modal-close" onclick="closeModal('syncModal')">✕</button>
     </div>
-    <div class="modal-body" style="padding:16px;overflow-y:auto">
+    <div class="modal-body" style="padding:16px;overflow-y:auto;max-height:80vh">
 
-      <div class="sync-modal-section">
-        <div class="sync-modal-label">GitHub Personal Access Token</div>
-        <input class="sync-modal-input" id="syncToken" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-        <div class="sync-modal-hint">
-          Create one at <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens</a>
-          → select <strong>Gist</strong> scope only. Stored only in your browser.
+      <!-- ── VIEW: Login (profile exists, not logged in) ── -->
+      <div id="syncViewLogin" style="display:none">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:44px;margin-bottom:8px">🔐</div>
+          <div id="syncLoginName" style="font-weight:700;font-size:18px;color:var(--text1)"></div>
+          <div style="color:var(--text3);font-size:13px;margin-top:4px">Enter your password to unlock sync</div>
         </div>
+        <div class="sync-modal-section">
+          <div class="sync-modal-label">Password</div>
+          <input class="sync-modal-input" id="syncLoginPw" type="password" placeholder="Your password"
+                 onkeydown="if(event.key==='Enter')loginProfile()">
+        </div>
+        <button class="sync-save-btn" onclick="loginProfile()">🔓 Sign In</button>
+        <div style="text-align:center;margin-top:12px">
+          <button class="sync-clear-btn" style="color:var(--text3)" onclick="showSyncView('setup')">Different account / Start over</button>
+        </div>
+        <div class="sync-status-box" id="syncStatusLogin"></div>
       </div>
 
-      <div class="sync-modal-section">
-        <div class="sync-modal-label">Gist ID <span style="font-weight:400;text-transform:none">(leave blank to create a new one)</span></div>
-        <input class="sync-modal-input" id="syncGistId" type="text" placeholder="e.g. a1b2c3d4e5f6…">
-        <div class="sync-modal-hint">
-          The ID is the last part of your Gist URL:<br>
-          <code style="color:var(--accent2)">gist.github.com/yourname/<strong>abc123</strong></code>
+      <!-- ── VIEW: Setup (no profile) ── -->
+      <div id="syncViewSetup" style="display:none">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:36px;margin-bottom:6px">☁</div>
+          <div style="font-weight:700;font-size:16px;color:var(--text1)">Set Up Cloud Sync</div>
+          <div style="color:var(--text3);font-size:13px;margin-top:4px">Keep your data safe &amp; synced across devices</div>
         </div>
+        <div class="sync-tab-row">
+          <button class="sync-tab active" id="stab-create"   onclick="showSetupTab('create')">Create Profile</button>
+          <button class="sync-tab"        id="stab-import"   onclick="showSetupTab('import')">Import Code</button>
+          <button class="sync-tab"        id="stab-advanced" onclick="showSetupTab('advanced')">Advanced</button>
+        </div>
+
+        <!-- Create Profile tab -->
+        <div id="setupTabCreate">
+          <div class="sync-modal-section">
+            <div class="sync-modal-label">Username</div>
+            <input class="sync-modal-input" id="setupUsername" type="text" placeholder="e.g. your name or handle">
+          </div>
+          <div class="sync-modal-section">
+            <div class="sync-modal-label">Password</div>
+            <input class="sync-modal-input" id="setupPassword" type="password" placeholder="Choose a password">
+          </div>
+          <div class="sync-modal-section">
+            <div class="sync-modal-label">GitHub Personal Access Token</div>
+            <input class="sync-modal-input" id="setupToken" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            <div class="sync-modal-hint">Create at <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens</a> → select <strong>Gist</strong> scope only.</div>
+          </div>
+          <div class="sync-modal-section">
+            <div class="sync-modal-label">Gist ID <span style="font-weight:400;text-transform:none">(leave blank to create a new Gist)</span></div>
+            <input class="sync-modal-input" id="setupGistId" type="text" placeholder="Paste existing Gist ID (optional)">
+          </div>
+          <button class="sync-save-btn" onclick="createProfile()">✓ Create Profile &amp; Connect</button>
+          <button class="sync-create-btn" style="margin-top:8px" onclick="findMyGist()">🔍 Find My Existing NutriTrack Gist</button>
+        </div>
+
+        <!-- Import Transfer Code tab -->
+        <div id="setupTabImport" style="display:none">
+          <div style="color:var(--text2);font-size:13px;margin-bottom:12px;line-height:1.6">
+            On your existing device, open Sync → <strong>Get Transfer Code</strong> and copy it. Paste it below:
+          </div>
+          <div class="sync-modal-section">
+            <div class="sync-modal-label">Transfer Code</div>
+            <textarea class="sync-modal-input" id="importCodeInput" rows="5"
+              placeholder="Paste your transfer code here…"
+              style="resize:vertical;font-family:monospace;font-size:11px"></textarea>
+          </div>
+          <button class="sync-save-btn" onclick="importTransferCode()">📥 Import &amp; Connect</button>
+        </div>
+
+        <!-- Advanced (raw token/gist) tab -->
+        <div id="setupTabAdvanced" style="display:none">
+          <div class="sync-modal-section">
+            <div class="sync-modal-label">GitHub Personal Access Token</div>
+            <input class="sync-modal-input" id="syncToken" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <div class="sync-modal-section">
+            <div class="sync-modal-label">Gist ID <span style="font-weight:400;text-transform:none">(leave blank to create new)</span></div>
+            <input class="sync-modal-input" id="syncGistId" type="text" placeholder="e.g. a1b2c3d4e5f6…">
+          </div>
+          <button class="sync-save-btn" onclick="saveSyncSettings()">💾 Save &amp; Connect</button>
+          <button class="sync-create-btn" style="margin-top:8px" onclick="createAndConnectGist()">✨ Create New Private Gist</button>
+          <button class="sync-now-btn"   style="margin-top:8px" onclick="forceSyncNow()">⟳ Pull from Gist</button>
+        </div>
+
+        <div class="sync-status-box" id="syncStatusSetup"></div>
       </div>
 
-      <button class="sync-save-btn" onclick="saveSyncSettings()">💾 Save &amp; Connect</button>
-      <button class="sync-create-btn" onclick="createAndConnectGist()">✨ Create New Private Gist for Me</button>
-      <button class="sync-now-btn" onclick="forceSyncNow()">⟳ Sync Now (pull from Gist)</button>
+      <!-- ── VIEW: Connected (logged in) ── -->
+      <div id="syncViewConnected" style="display:none">
+        <div class="sync-profile-header">
+          <div style="font-size:32px">👤</div>
+          <div style="flex:1;min-width:0">
+            <div id="syncConnectedName" style="font-weight:700;font-size:15px;color:var(--text1)"></div>
+            <div id="syncLastSaved" style="color:var(--text3);font-size:12px;margin-top:2px">Not synced yet</div>
+          </div>
+          <button class="sync-clear-btn" style="color:var(--text3);white-space:nowrap" onclick="logoutProfile()">Log Out</button>
+        </div>
 
-      <div class="sync-status-box" id="syncStatusBox"></div>
+        <div id="syncGistInfoRow" style="display:none;margin-bottom:12px;padding:8px 12px;background:var(--bg3);
+             border-radius:8px;font-size:12px;color:var(--text3)">
+          <strong style="color:var(--text2)">Gist ID: </strong><span id="syncGistIdDisplay" style="font-family:monospace"></span>
+        </div>
 
-      <div class="sync-info-row">
-        <span id="syncLastSaved" style="color:var(--text3)">Not synced yet</span>
-        <button class="sync-clear-btn" onclick="clearSyncSettings()">Disconnect</button>
+        <div class="sync-action-grid">
+          <button class="sync-now-btn" style="margin:0;padding:10px" onclick="forceSyncNow()">⬇ Pull (download)</button>
+          <button class="sync-save-btn" style="margin:0;padding:10px" onclick="manualPush()">⬆ Push (upload)</button>
+        </div>
+
+        <button class="sync-create-btn" style="margin-top:4px" onclick="showTransferCode()">📱 Get Transfer Code (for new device)</button>
+
+        <div id="transferCodeBox" style="display:none;margin-top:12px;padding:12px;background:var(--bg3);border-radius:10px">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">📱 Transfer Code</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5">On your new device: Sync → Import Code → paste this:</div>
+          <textarea id="transferCodeText" readonly rows="4"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;
+                   padding:8px;font-family:monospace;font-size:10px;color:var(--text2);resize:none;box-sizing:border-box"></textarea>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('transferCodeText').value).then(()=>toast('📋 Copied!'))"
+            style="margin-top:8px;width:100%;padding:9px;background:var(--accent);color:#fff;border:none;
+                   border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">
+            📋 Copy to Clipboard
+          </button>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="sync-clear-btn" style="color:var(--text3)" onclick="showSyncView('setup')">⚙ Change Settings</button>
+          <button class="sync-clear-btn" onclick="deleteProfile()">🗑 Delete Profile</button>
+        </div>
+
+        <div class="sync-status-box" id="syncStatusBox"></div>
       </div>
 
     </div>
@@ -2016,7 +2151,17 @@
         <div class="cf-field cf-full"><label class="cf-label">Food Name *</label><input class="cf-input" id="cf-name" placeholder="e.g. Mom's Oatmeal"></div>
         <div class="cf-field cf-full"><label class="cf-label">Brand / Notes</label><input class="cf-input" id="cf-brand" placeholder="e.g. Homemade"></div>
         <div class="cf-field cf-full"><label class="cf-label">Serving Size Name *</label><input class="cf-input" id="cf-serving-name" placeholder="e.g. 1 cup, 100g, 1 piece"></div>
-        <div class="cf-field"><label class="cf-label">Grams per Serving *</label><input class="cf-input" id="cf-grams" type="number" placeholder="100"></div>
+        <div class="cf-field"><label class="cf-label">Serving Amount *</label>
+          <div style="display:flex;gap:6px">
+            <input class="cf-input" id="cf-grams" type="number" placeholder="100" style="flex:1;min-width:0">
+            <select class="cf-input" id="cf-grams-unit" style="width:76px;flex-shrink:0;padding:8px 4px">
+              <option value="g">g</option>
+              <option value="oz">oz</option>
+              <option value="fl oz">fl oz</option>
+              <option value="ml">ml</option>
+            </select>
+          </div>
+        </div>
         <div class="cf-field"><label class="cf-label">Calories *</label><input class="cf-input" id="cf-cal" type="number" placeholder="0"></div>
         <div class="cf-field"><label class="cf-label">Protein (g)</label><input class="cf-input" id="cf-protein" type="number" placeholder="0"></div>
         <div class="cf-field"><label class="cf-label">Carbs (g)</label><input class="cf-input" id="cf-carbs" type="number" placeholder="0"></div>
@@ -4401,7 +4546,10 @@ function openCustomFoodModal() {
 function saveCustomFood() {
   const name = document.getElementById('cf-name').value.trim();
   if (!name) { showToast('⚠️ Food name is required'); return; }
-  const grams = parseFloat(document.getElementById('cf-grams').value) || 100;
+  const rawAmt = parseFloat(document.getElementById('cf-grams').value) || 100;
+  const unit   = document.getElementById('cf-grams-unit')?.value || 'g';
+  // Convert to grams for internal storage: oz→g, fl oz→ml(≈g), ml≈g
+  const grams = unit === 'oz' ? rawAmt * 28.3495 : unit === 'fl oz' ? rawAmt * 29.5735 : rawAmt;
   const p100 = v => (parseFloat(document.getElementById('cf-'+v)?.value) || 0) / grams * 100;
   const newFood = {
     id: 10000 + (Date.now() % 9000000),
@@ -4414,7 +4562,7 @@ function saveCustomFood() {
     vitB12: p100('vitB12'), folate: p100('folate'), calcium: p100('calcium'),
     iron: p100('iron'), magnesium: p100('magnesium'), potassium: p100('potassium'),
     sodium: p100('sodium'), zinc: p100('zinc'),
-    servings: [{ name: document.getElementById('cf-serving-name').value.trim() || '1 serving', g: grams }]
+    servings: [{ name: document.getElementById('cf-serving-name').value.trim() || `1 serving (${rawAmt}${unit})`, g: grams }]
   };
   customFoods.push(newFood);
   saveState();
@@ -4428,6 +4576,20 @@ function saveCustomFood() {
 // ══════════════════════════════════
 // SCAN LABEL
 // ══════════════════════════════════
+// ── Label cache (persists forever — API only called once per product) ─────────
+const LABEL_CACHE_KEY = 'nt_label_cache';
+function labelCacheGet(name) {
+  try { const c = JSON.parse(localStorage.getItem(LABEL_CACHE_KEY) || '{}'); return c[name.toLowerCase().trim()] || null; }
+  catch { return null; }
+}
+function labelCacheSet(name, data) {
+  try {
+    const c = JSON.parse(localStorage.getItem(LABEL_CACHE_KEY) || '{}');
+    c[name.toLowerCase().trim()] = data;
+    localStorage.setItem(LABEL_CACHE_KEY, JSON.stringify(c));
+  } catch {}
+}
+
 function openScanModal() {
   closeModal('foodModal');
   scanData = null;
@@ -4436,9 +4598,15 @@ function openScanModal() {
   document.getElementById('scanAnalyzeBtn').style.display = 'none';
   document.getElementById('scanResults').style.display = 'none';
   document.getElementById('scanStatus').style.display = 'none';
-  document.getElementById('scanBtnText').textContent = '📷 Read Label';
+  document.getElementById('scanBtnText').textContent = '🤖 Read Label with Claude';
   document.getElementById('scanAnalyzeBtn').disabled = false;
   document.getElementById('scanFileInput').value = '';
+  document.getElementById('scanProductName').value = '';
+  // Pre-fill saved API key
+  const saved = localStorage.getItem('nt_apikey') || '';
+  document.getElementById('scanApiKey').value = saved;
+  if (saved) document.getElementById('scanApiDetails').removeAttribute('open');
+  else        document.getElementById('scanApiDetails').setAttribute('open', '');
   openModal('scanModal');
 }
 
@@ -4461,140 +4629,134 @@ async function analyzeLabel() {
   if (!imgEl.src || imgEl.src === window.location.href) {
     showScanStatus('error', '⚠️ Select an image first.'); return;
   }
+
+  const productName = (document.getElementById('scanProductName').value || '').trim();
+  const apiKey = (document.getElementById('scanApiKey').value || '').trim()
+                 || localStorage.getItem('nt_apikey') || '';
+
+  // ── Cache check: instant hit if product name matches ─────────────────────
+  if (productName) {
+    const cached = labelCacheGet(productName);
+    if (cached) {
+      scanData = cached;
+      showScanStatus('ok', '⚡ Loaded from cache — no API call needed!');
+      renderScanResults(scanData);
+      return;
+    }
+  }
+
+  if (!apiKey) {
+    showScanStatus('error', '⚠️ Enter your Claude API key above. After the first scan the result is cached — you won\'t need it again for this product.');
+    document.getElementById('scanApiDetails').setAttribute('open', '');
+    return;
+  }
+
   const btn = document.getElementById('scanAnalyzeBtn');
   btn.disabled = true;
   document.getElementById('scanBtnText').textContent = '⏳ Reading…';
   document.getElementById('scanResults').style.display = 'none';
-  showScanStatus('loading', '🔍 Running OCR on your label… (this may take 10–20 seconds)');
+  showScanStatus('loading', '🤖 Claude is reading your label…');
+
   try {
-    const result = await Tesseract.recognize(imgEl.src, 'eng', {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          const pct = Math.round((m.progress || 0) * 100);
-          showScanStatus('loading', `🔍 Reading label… ${pct}%`);
-        }
-      }
-    });
-    const text = result.data.text;
-    scanData = parseNutritionLabel(text);
-    document.getElementById('scanStatus').style.display = 'none';
+    const src = imgEl.src;
+    const base64 = src.split(',')[1];
+    const mimeMatch = src.match(/^data:([^;]+);/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+    const raw = await analyzeLabelWithClaude(base64, mimeType, productName, apiKey);
+
+    scanData = {
+      name:          raw.name          || productName || '',
+      brand:         raw.brand         || '',
+      servingName:   raw.servingName   || '1 serving',
+      servingUnit:   raw.servingUnit   || 'g',
+      gramsPerServing: +(raw.gramsPerServing || 100),
+      calories:  +(raw.calories  || 0), protein:   +(raw.protein   || 0),
+      carbs:     +(raw.carbs     || 0), fat:       +(raw.fat       || 0),
+      fiber:     +(raw.fiber     || 0), sugar:     +(raw.sugar     || 0),
+      sodium:    +(raw.sodium    || 0), calcium:   +(raw.calcium   || 0),
+      iron:      +(raw.iron      || 0), potassium: +(raw.potassium || 0),
+      vitA:  +(raw.vitA  || 0), vitC:  +(raw.vitC  || 0), vitD:  +(raw.vitD  || 0),
+      vitE:  +(raw.vitE  || 0), vitK:  +(raw.vitK  || 0),
+      vitB1: +(raw.vitB1 || 0), vitB2: +(raw.vitB2 || 0), vitB3: +(raw.vitB3 || 0),
+      vitB6: +(raw.vitB6 || 0), vitB12:+(raw.vitB12|| 0), folate:+(raw.folate|| 0),
+      magnesium:+(raw.magnesium || 0), zinc:+(raw.zinc || 0),
+    };
+
+    // Save API key for next time
+    localStorage.setItem('nt_apikey', apiKey);
+
+    // Cache permanently by product name
+    const cacheKey = (productName || scanData.name).toLowerCase().trim();
+    if (cacheKey) labelCacheSet(cacheKey, scanData);
+
+    showScanStatus('ok', '✓ Label read! Cached — no API call needed next time for this product.');
     renderScanResults(scanData);
+
   } catch(e) {
-    showScanStatus('error', '❌ Could not read the label. Try a clearer, well-lit photo.');
+    showScanStatus('error', '❌ ' + e.message);
     console.error(e);
   } finally {
     btn.disabled = false;
-    document.getElementById('scanBtnText').textContent = '📷 Read Label';
+    document.getElementById('scanBtnText').textContent = '🤖 Read Label with Claude';
   }
 }
 
-function parseNutritionLabel(text) {
-  // Normalise: lowercase, collapse whitespace, fix common OCR artefacts
-  const raw = text;
-  const t = text.toLowerCase()
-    .replace(/[|\\[\]{}]/g, ' ')
-    .replace(/\s+/g, ' ');
+// ── Claude vision API call ────────────────────────────────────────────────────
+async function analyzeLabelWithClaude(base64, mimeType, productNameHint, apiKey) {
+  const prompt = `Analyze this nutrition facts label image and extract all the information. Return a single JSON object with these exact fields (numbers only, no units inside values):
 
-  const num = (pattern) => {
-    const m = t.match(pattern);
-    if (!m) return 0;
-    const v = parseFloat(m[1].replace(/,/g, '.'));
-    return isNaN(v) ? 0 : v;
-  };
+{
+  "name": "product name (use hint if label unclear: ${productNameHint || 'unknown'})",
+  "brand": "brand name or empty string",
+  "servingName": "serving size text e.g. '1 cup', '2 tbsp', '12 fl oz', '1 can (355ml)'",
+  "servingUnit": "primary unit: g | oz | fl oz | ml | cup | tbsp | tsp | piece",
+  "gramsPerServing": convert serving to grams (fl oz × 29.57, oz × 28.35, ml = ml, g = g; for cups/tbsp estimate by density),
+  "calories": number,
+  "protein": grams,
+  "carbs": total carbohydrates in grams,
+  "fat": total fat in grams,
+  "fiber": grams,
+  "sugar": grams,
+  "sodium": percent Daily Value,
+  "calcium": percent Daily Value,
+  "iron": percent Daily Value,
+  "potassium": percent Daily Value,
+  "vitA": percent DV, "vitC": percent DV, "vitD": percent DV,
+  "vitE": percent DV, "vitK": percent DV,
+  "vitB1": percent DV, "vitB2": percent DV, "vitB3": percent DV,
+  "vitB6": percent DV, "vitB12": percent DV, "folate": percent DV,
+  "magnesium": percent DV, "zinc": percent DV
+}
 
-  // ── Macros (grams) ──────────────────────────────────────────────────────────
-  // Calories: "calories 250" or "calories: 250" or "calories/calorie  250"
-  const calories = num(/calori[eo]s?\s*[:\-]?\s*(\d{1,4})\b/);
+Use 0 for any value not visible. Return ONLY the JSON — no markdown, no explanation.`;
 
-  // Total Fat
-  const fat = num(/total\s*fat\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/);
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+        { type: 'text', text: prompt }
+      ]}]
+    })
+  });
 
-  // Saturated fat (used as a fallback signal, not stored separately)
-  // Total Carbohydrate
-  const carbs = num(/total\s*carb(?:ohydrate)?s?\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/);
-
-  // Dietary Fiber
-  const fiber = num(/dietary\s*fiber\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/);
-
-  // Sugars / Total Sugars
-  const sugar = num(/(?:total\s*)?sugars?\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/);
-
-  // Protein
-  const protein = num(/protein\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/);
-
-  // ── Serving size ────────────────────────────────────────────────────────────
-  // e.g. "serving size 1 cup (240g)" or "serving size 2 tbsp 32g"
-  let servingName = '';
-  let gramsPerServing = 100;
-  const ssMatch = t.match(/serving\s*size\s*[:\-]?\s*([^\n]{2,40})/);
-  if (ssMatch) {
-    servingName = raw.substring(
-      raw.toLowerCase().indexOf(ssMatch[1].trim()),
-      raw.toLowerCase().indexOf(ssMatch[1].trim()) + ssMatch[1].trim().length
-    ).trim();
-    // Extract grams/ml from the serving size line
-    const gm = ssMatch[1].match(/\(?\s*(\d+(?:\.\d+)?)\s*(?:g|ml|mL)\s*\)?/);
-    if (gm) gramsPerServing = parseFloat(gm[1]);
-    // Also look for oz and convert
-    const oz = ssMatch[1].match(/(\d+(?:\.\d+)?)\s*oz/);
-    if (!gm && oz) gramsPerServing = Math.round(parseFloat(oz[1]) * 28.35);
-    if (!servingName) servingName = ssMatch[1].trim();
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Claude API error ${resp.status}`);
   }
-
-  // ── % Daily Values (vitamins / minerals) ────────────────────────────────────
-  // Standard label format: "Vitamin D  2mcg  10%"  or  "Vitamin D 10%"
-  const dv = (pattern) => {
-    const m = t.match(pattern);
-    if (!m) return 0;
-    const v = parseFloat(m[1]);
-    return isNaN(v) ? 0 : v;
-  };
-
-  // Vitamin A – sometimes listed as "Vit. A" or "Vitamin A"
-  const vitA  = dv(/vit(?:amin)?\s*\.?\s*a\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitC  = dv(/vit(?:amin)?\s*\.?\s*c\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitD  = dv(/vit(?:amin)?\s*\.?\s*d\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitE  = dv(/vit(?:amin)?\s*\.?\s*e\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitK  = dv(/vit(?:amin)?\s*\.?\s*k\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitB1 = dv(/(?:vit(?:amin)?\s*\.?\s*b[\s\-]?1|thiamin(?:e)?)\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitB2 = dv(/(?:vit(?:amin)?\s*\.?\s*b[\s\-]?2|riboflavin)\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitB3 = dv(/(?:vit(?:amin)?\s*\.?\s*b[\s\-]?3|niacin)\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitB6 = dv(/(?:vit(?:amin)?\s*\.?\s*b[\s\-]?6|pyridoxine)\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const vitB12= dv(/(?:vit(?:amin)?\s*\.?\s*b[\s\-]?12|cobalamin)\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const folate= dv(/(?:folate|folic\s*acid)\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const calcium  = dv(/calcium\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const iron     = dv(/iron\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const magnesium= dv(/magnesium\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  const zinc     = dv(/zinc\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  // Potassium – sometimes listed with mg value before %, or just %
-  const potassium= dv(/potassium\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  // Sodium – usually mg value; convert to % (2300mg = 100%)
-  let sodium = dv(/sodium\b[^%]{0,30}?(\d+(?:\.\d+)?)\s*%/);
-  if (!sodium) {
-    const smg = num(/sodium\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*mg/);
-    if (smg) sodium = Math.round(smg / 23);
-  }
-
-  // ── Try to extract product name from the top of the label ───────────────────
-  // Take the first non-empty, non-numeric line of reasonable length
-  const lines = raw.split(/\n/).map(l => l.trim()).filter(l => l.length > 2);
-  let name = '';
-  for (const line of lines) {
-    const low = line.toLowerCase();
-    if (low.startsWith('nutrition') || low.startsWith('supplement')) continue;
-    if (/^\d/.test(line)) continue;
-    if (line.length > 3 && line.length < 60) { name = line; break; }
-  }
-
-  return {
-    name, brand: '',
-    servingName: servingName || '1 serving',
-    gramsPerServing,
-    calories, protein, carbs, fat, fiber, sugar,
-    vitA, vitC, vitD, vitE, vitK,
-    vitB1, vitB2, vitB3, vitB6, vitB12, folate,
-    calcium, iron, magnesium, potassium, sodium, zinc
-  };
+  const result = await resp.json();
+  const text = result.content[0].text.trim()
+    .replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  return JSON.parse(text);
 }
 
 function showScanStatus(type, msg) {
@@ -4605,16 +4767,26 @@ function showScanStatus(type, msg) {
 
 function renderScanResults(d) {
   document.getElementById('scanResults').style.display = 'block';
+  // Show serving unit-aware display
+  const servingDisplay = d.servingUnit && d.servingUnit !== 'g'
+    ? `${d.servingName}`
+    : d.gramsPerServing ? `${d.servingName} (${d.gramsPerServing}g)` : d.servingName;
   const rows = [
-    ['Name', d.name], ['Brand', d.brand], ['Serving', d.servingName],
-    ['Per Serving', d.gramsPerServing ? d.gramsPerServing+'g' : null],
-    ['Calories', d.calories], ['Protein', d.protein ? d.protein+'g' : null],
-    ['Carbs', d.carbs ? d.carbs+'g' : null], ['Fat', d.fat ? d.fat+'g' : null],
-    ['Fiber', d.fiber ? d.fiber+'g' : null], ['Sugar', d.sugar ? d.sugar+'g' : null],
-    ['Vitamin D', d.vitD ? d.vitD+'%DV' : null], ['Calcium', d.calcium ? d.calcium+'%DV' : null],
-    ['Iron', d.iron ? d.iron+'%DV' : null], ['Potassium', d.potassium ? d.potassium+'%DV' : null],
-    ['Sodium', d.sodium ? d.sodium+'%DV' : null],
-  ].filter(([,v]) => v != null && v !== '' && v !== '0' && v !== '0g' && v !== '0%DV');
+    ['Name',     d.name   || null],
+    ['Brand',    d.brand  || null],
+    ['Serving',  servingDisplay || null],
+    ['Calories', d.calories || null],
+    ['Protein',  d.protein  ? d.protein+'g'  : null],
+    ['Carbs',    d.carbs    ? d.carbs+'g'    : null],
+    ['Fat',      d.fat      ? d.fat+'g'      : null],
+    ['Fiber',    d.fiber    ? d.fiber+'g'    : null],
+    ['Sugar',    d.sugar    ? d.sugar+'g'    : null],
+    ['Sodium',   d.sodium   ? d.sodium+'%DV' : null],
+    ['Vitamin D',d.vitD     ? d.vitD+'%DV'  : null],
+    ['Calcium',  d.calcium  ? d.calcium+'%DV': null],
+    ['Iron',     d.iron     ? d.iron+'%DV'   : null],
+    ['Potassium',d.potassium? d.potassium+'%DV':null],
+  ].filter(([,v]) => v != null && v !== '' && v !== 0);
   document.getElementById('scanResultPreview').innerHTML = rows.map(([k,v]) =>
     `<div class="scan-result-item"><div class="scan-result-key">${k}</div><div class="scan-result-val">${v}</div></div>`
   ).join('');
@@ -4626,7 +4798,23 @@ function applyScanResults() {
   openModal('customFoodModal');
   const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
   set('cf-name', scanData.name); set('cf-brand', scanData.brand);
-  set('cf-serving-name', scanData.servingName); set('cf-grams', scanData.gramsPerServing || 100);
+  set('cf-serving-name', scanData.servingName);
+
+  // Set serving amount + unit (store grams internally but show original unit if not g)
+  const su = scanData.servingUnit || 'g';
+  const unitEl = document.getElementById('cf-grams-unit');
+  if (unitEl) {
+    // Show the natural unit from the label
+    const validUnits = ['g','oz','fl oz','ml'];
+    unitEl.value = validUnits.includes(su) ? su : 'g';
+  }
+  // Show the amount in the original unit if we can back-calculate, otherwise fall back to grams
+  const gramsVal = scanData.gramsPerServing || 100;
+  let displayAmt = gramsVal;
+  if (su === 'oz')    displayAmt = +(gramsVal / 28.3495).toFixed(2);
+  if (su === 'fl oz') displayAmt = +(gramsVal / 29.5735).toFixed(2);
+  set('cf-grams', displayAmt);
+
   set('cf-cal', scanData.calories); set('cf-protein', scanData.protein);
   set('cf-carbs', scanData.carbs); set('cf-fat', scanData.fat);
   set('cf-fiber', scanData.fiber); set('cf-sugar', scanData.sugar);
@@ -5497,12 +5685,16 @@ function resetCustomization() {
 // ══════════════════════════════════
 // GITHUB GIST SYNC
 // ══════════════════════════════════
-const GIST_FILE = 'nutritrack-data.json';
-const LS_TOKEN   = 'nt_gh_token';
-const LS_GIST_ID = 'nt_gist_id';
-const LS_LAST_SYNC = 'nt_last_sync';
+const GIST_FILE       = 'nutritrack-data.json';
+const LS_TOKEN        = 'nt_gh_token';
+const LS_GIST_ID      = 'nt_gist_id';
+const LS_LAST_SYNC    = 'nt_last_sync';
+const LS_PROFILE      = 'nt_profile';
+const LS_PROFILE_ACTIVE = 'nt_profile_active';
 
 let syncDebounceTimer = null;
+let _syncStartupGuard = true; // prevents auto-push during startup pull
+let _skipSyncPush     = false; // set true during applySnapshot to avoid push-after-pull
 
 // ── Indicator helpers ────────────────────────────────────────────────────────
 function setSyncState(state, label) {
@@ -5552,13 +5744,14 @@ async function gistRequest(method, path, body) {
 // ── Build the full state snapshot ────────────────────────────────────────────
 function buildSnapshot() {
   return {
-    v: 2,
+    v: 3,
     savedAt: new Date().toISOString(),
     diary,
     exercises,
     goals: GOALS,
     customFoods,
     recipes,
+    weightLog,
     ingredientCache: (() => {
       try { return JSON.parse(localStorage.getItem(ING_CACHE_KEY) || '{}'); } catch { return {}; }
     })()
@@ -5573,11 +5766,14 @@ function applySnapshot(snap) {
   if (snap.goals)       GOALS       = { ...GOALS, ...snap.goals };
   if (snap.customFoods) customFoods = snap.customFoods;
   if (snap.recipes)     recipes     = snap.recipes;
+  if (snap.weightLog)   weightLog   = snap.weightLog;
   if (snap.ingredientCache) {
     try { localStorage.setItem(ING_CACHE_KEY, JSON.stringify(snap.ingredientCache)); } catch {}
   }
-  // persist to localStorage as well
+  // persist to localStorage (skip sync push — we just pulled)
+  _skipSyncPush = true;
   saveState();
+  _skipSyncPush = false;
 }
 
 // ── Push to Gist ─────────────────────────────────────────────────────────────
@@ -5623,29 +5819,281 @@ async function pullFromGist() {
 
 // ── Debounced auto-push after every save ─────────────────────────────────────
 function scheduleSyncPush() {
+  if (_syncStartupGuard || _skipSyncPush) return; // don't push during startup pull or applySnapshot
   clearTimeout(syncDebounceTimer);
   syncDebounceTimer = setTimeout(() => pushToGist(true), 3000);
 }
 
-// ── Modal actions ────────────────────────────────────────────────────────────
-function openSyncModal() {
-  document.getElementById('syncToken').value  = localStorage.getItem(LS_TOKEN)  || '';
-  document.getElementById('syncGistId').value = localStorage.getItem(LS_GIST_ID) || '';
-  document.getElementById('syncStatusBox').style.display = 'none';
-  const last = localStorage.getItem(LS_LAST_SYNC);
-  document.getElementById('syncLastSaved').textContent = last
-    ? 'Last synced: ' + new Date(last).toLocaleString()
-    : 'Not synced yet';
-  openModal('syncModal');
+// ── Password hash (Web Crypto SHA-256) ───────────────────────────────────────
+async function hashPassword(pw) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function showSyncModalStatus(type, msg) {
-  const el = document.getElementById('syncStatusBox');
+// ── Sync modal view helpers ───────────────────────────────────────────────────
+function showSyncView(view) {
+  ['Login','Setup','Connected'].forEach(v => {
+    const el = document.getElementById('syncView' + v);
+    if (el) el.style.display = v.toLowerCase() === view ? 'block' : 'none';
+  });
+}
+
+function showSetupTab(tab) {
+  ['create','import','advanced'].forEach(t => {
+    const key = t.charAt(0).toUpperCase() + t.slice(1);
+    const panel = document.getElementById('setupTab' + key);
+    const btn   = document.getElementById('stab-' + t);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (btn)   btn.classList.toggle('active', t === tab);
+  });
+}
+
+function showSyncStatusIn(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
   el.className = 'sync-status-box sync-status-' + type;
   el.style.display = 'block';
   el.textContent = msg;
 }
 
+function showSyncModalStatus(type, msg) {
+  showSyncStatusIn('syncStatusBox', type, msg);
+}
+
+function _clearSyncStatusBoxes() {
+  ['syncStatusLogin','syncStatusSetup','syncStatusBox'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.textContent = ''; }
+  });
+}
+
+// ── Modal open ────────────────────────────────────────────────────────────────
+function openSyncModal() {
+  _clearSyncStatusBoxes();
+  document.getElementById('transferCodeBox').style.display = 'none';
+
+  const profile = JSON.parse(localStorage.getItem(LS_PROFILE) || 'null');
+  const active  = localStorage.getItem(LS_PROFILE_ACTIVE);
+
+  if (!profile) {
+    // No profile yet → setup view
+    showSyncView('setup');
+    showSetupTab('create');
+    // Pre-fill token/gistId if user previously used advanced mode
+    const tok = localStorage.getItem(LS_TOKEN);
+    const gid = localStorage.getItem(LS_GIST_ID);
+    if (tok) document.getElementById('setupToken').value = tok;
+    if (gid) document.getElementById('setupGistId').value = gid;
+  } else if (!active) {
+    // Profile exists, not logged in → login view
+    document.getElementById('syncLoginName').textContent = profile.username;
+    document.getElementById('syncLoginPw').value = '';
+    showSyncView('login');
+  } else {
+    // Logged in → connected view
+    _showConnectedView(profile);
+  }
+
+  openModal('syncModal');
+}
+
+function _showConnectedView(profile) {
+  document.getElementById('syncConnectedName').textContent = profile.username;
+  const last = localStorage.getItem(LS_LAST_SYNC);
+  document.getElementById('syncLastSaved').textContent = last
+    ? 'Last synced: ' + new Date(last).toLocaleString()
+    : 'Not synced yet';
+  const gistId = localStorage.getItem(LS_GIST_ID);
+  const infoRow = document.getElementById('syncGistInfoRow');
+  if (gistId && infoRow) {
+    infoRow.style.display = 'block';
+    document.getElementById('syncGistIdDisplay').textContent = gistId;
+  } else if (infoRow) {
+    infoRow.style.display = 'none';
+  }
+  showSyncView('connected');
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+async function loginProfile() {
+  const profile = JSON.parse(localStorage.getItem(LS_PROFILE) || 'null');
+  if (!profile) return;
+  const pw = document.getElementById('syncLoginPw').value;
+  if (!pw) { showSyncStatusIn('syncStatusLogin','error','⚠ Enter your password.'); return; }
+  const hash = await hashPassword(pw);
+  if (hash !== profile.passwordHash) {
+    showSyncStatusIn('syncStatusLogin','error','✗ Incorrect password. Try again.');
+    return;
+  }
+  // Load token + gistId from profile
+  if (profile.token)  localStorage.setItem(LS_TOKEN, profile.token);
+  if (profile.gistId) localStorage.setItem(LS_GIST_ID, profile.gistId);
+  localStorage.setItem(LS_PROFILE_ACTIVE, '1');
+  updateSyncIndicator();
+  _showConnectedView(profile);
+  // Auto-pull after login
+  showSyncStatusIn('syncStatusBox','info','⟳ Loading your data from Gist…');
+  const ok = await pullFromGist();
+  if (ok) {
+    renderAll(); renderFitness();
+    showSyncStatusIn('syncStatusBox','ok','✓ Data loaded from Gist!');
+  } else {
+    showSyncStatusIn('syncStatusBox','error','⚠ Could not reach Gist. Check your GitHub token is still valid.');
+  }
+}
+
+function logoutProfile() {
+  localStorage.removeItem(LS_PROFILE_ACTIVE);
+  const profile = JSON.parse(localStorage.getItem(LS_PROFILE) || 'null');
+  if (profile) document.getElementById('syncLoginName').textContent = profile.username;
+  document.getElementById('syncLoginPw').value = '';
+  showSyncView('login');
+}
+
+// ── Create Profile ─────────────────────────────────────────────────────────────
+async function createProfile() {
+  const username = document.getElementById('setupUsername').value.trim();
+  const password = document.getElementById('setupPassword').value;
+  const token    = document.getElementById('setupToken').value.trim();
+  const gistId   = document.getElementById('setupGistId').value.trim();
+
+  if (!username) { showSyncStatusIn('syncStatusSetup','error','⚠ Enter a username.'); return; }
+  if (!password) { showSyncStatusIn('syncStatusSetup','error','⚠ Enter a password.'); return; }
+  if (!token)    { showSyncStatusIn('syncStatusSetup','error','⚠ Enter your GitHub Personal Access Token.'); return; }
+
+  showSyncStatusIn('syncStatusSetup','info','⟳ Setting up your profile…');
+  const passwordHash = await hashPassword(password);
+
+  localStorage.setItem(LS_TOKEN, token);
+  if (gistId) localStorage.setItem(LS_GIST_ID, gistId);
+
+  if (gistId) {
+    // Connect to existing Gist — PULL first (never push, to protect existing data)
+    showSyncStatusIn('syncStatusSetup','info','⟳ Connecting to your existing Gist…');
+    const ok = await pullFromGist();
+    if (!ok) {
+      showSyncStatusIn('syncStatusSetup','error','✗ Could not reach that Gist. Check your token and Gist ID.');
+      return;
+    }
+    renderAll(); renderFitness();
+  } else {
+    // Create brand-new Gist seeded with current data
+    showSyncStatusIn('syncStatusSetup','info','⟳ Creating a new private Gist…');
+    try {
+      const data = await gistRequest('POST', '/gists', {
+        description: 'NutriTrack Pro – nutrition diary sync',
+        public: false,
+        files: { [GIST_FILE]: { content: JSON.stringify(buildSnapshot(), null, 2) } }
+      });
+      localStorage.setItem(LS_GIST_ID, data.id);
+      localStorage.setItem(LS_LAST_SYNC, new Date().toISOString());
+    } catch(e) {
+      showSyncStatusIn('syncStatusSetup','error','✗ ' + e.message);
+      return;
+    }
+  }
+
+  const profile = {
+    username,
+    passwordHash,
+    token,
+    gistId: localStorage.getItem(LS_GIST_ID),
+    createdAt: new Date().toISOString()
+  };
+  localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+  localStorage.setItem(LS_PROFILE_ACTIVE, '1');
+  updateSyncIndicator();
+  _showConnectedView(profile);
+  showSyncStatusIn('syncStatusBox','ok','✓ Profile created! You\'re all set — your data is saved to GitHub Gist.');
+}
+
+// ── Delete Profile ─────────────────────────────────────────────────────────────
+function deleteProfile() {
+  if (!confirm('Delete your profile on this device?\n\nYour GitHub Gist data is NOT deleted — just the saved login on this device.')) return;
+  localStorage.removeItem(LS_PROFILE);
+  localStorage.removeItem(LS_PROFILE_ACTIVE);
+  showSyncView('setup');
+  showSetupTab('create');
+  const tok = localStorage.getItem(LS_TOKEN);
+  const gid = localStorage.getItem(LS_GIST_ID);
+  if (tok) document.getElementById('setupToken').value = tok;
+  if (gid) document.getElementById('setupGistId').value = gid;
+  toast('Profile removed from this device. Gist data is safe.');
+}
+
+// ── Transfer Code ─────────────────────────────────────────────────────────────
+function showTransferCode() {
+  const profile = JSON.parse(localStorage.getItem(LS_PROFILE) || 'null');
+  const token   = localStorage.getItem(LS_TOKEN)  || profile?.token  || '';
+  const gistId  = localStorage.getItem(LS_GIST_ID) || profile?.gistId || '';
+  const username = profile?.username || '';
+  if (!token || !gistId) {
+    showSyncStatusIn('syncStatusBox','error','⚠ No token or Gist ID found. Connect to a Gist first.');
+    return;
+  }
+  const code = btoa(JSON.stringify({ v: 1, username, token, gistId }));
+  document.getElementById('transferCodeText').value = code;
+  document.getElementById('transferCodeBox').style.display = 'block';
+}
+
+async function importTransferCode() {
+  const raw = document.getElementById('importCodeInput').value.trim();
+  if (!raw) { showSyncStatusIn('syncStatusSetup','error','⚠ Paste your transfer code first.'); return; }
+  let data;
+  try { data = JSON.parse(atob(raw)); }
+  catch(e) { showSyncStatusIn('syncStatusSetup','error','✗ Invalid transfer code. Make sure you copied the whole thing.'); return; }
+  if (!data.token || !data.gistId) {
+    showSyncStatusIn('syncStatusSetup','error','✗ Transfer code is missing required fields.'); return;
+  }
+  showSyncStatusIn('syncStatusSetup','info','⟳ Verifying connection…');
+  localStorage.setItem(LS_TOKEN,  data.token);
+  localStorage.setItem(LS_GIST_ID, data.gistId);
+  const ok = await pullFromGist();
+  if (!ok) {
+    showSyncStatusIn('syncStatusSetup','error','✗ Could not connect to Gist. The transfer code may have expired.');
+    return;
+  }
+  renderAll(); renderFitness();
+  const newPw = prompt(`Connected as "${data.username || 'My Profile'}"!\n\nChoose a password for this device (can be the same as your other device):`);
+  if (!newPw) {
+    showSyncStatusIn('syncStatusSetup','error','⚠ No password entered — profile not saved. Enter one to keep your login.');
+    return;
+  }
+  const passwordHash = await hashPassword(newPw);
+  const profile = { username: data.username || 'My Profile', passwordHash, token: data.token, gistId: data.gistId, createdAt: new Date().toISOString() };
+  localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+  localStorage.setItem(LS_PROFILE_ACTIVE, '1');
+  localStorage.setItem(LS_LAST_SYNC, new Date().toISOString());
+  updateSyncIndicator();
+  _showConnectedView(profile);
+  showSyncStatusIn('syncStatusBox','ok','✓ Transfer complete! All your data has been loaded.');
+}
+
+// ── Find existing NutriTrack Gist ─────────────────────────────────────────────
+async function findMyGist() {
+  const token = document.getElementById('setupToken').value.trim() || localStorage.getItem(LS_TOKEN);
+  if (!token) { showSyncStatusIn('syncStatusSetup','error','⚠ Enter your GitHub token first.'); return; }
+  localStorage.setItem(LS_TOKEN, token);
+  showSyncStatusIn('syncStatusSetup','info','⟳ Searching your Gists for NutriTrack data…');
+  try {
+    let page = 1, found = null;
+    while (page <= 5 && !found) {
+      const list = await gistRequest('GET', `/gists?per_page=30&page=${page}`);
+      if (!list.length) break;
+      found = list.find(g => g.files?.[GIST_FILE]);
+      page++;
+    }
+    if (found) {
+      document.getElementById('setupGistId').value = found.id;
+      showSyncStatusIn('syncStatusSetup','ok',`✓ Found your NutriTrack Gist! ID filled in above.\nNow click "Create Profile & Connect" to link it.`);
+    } else {
+      showSyncStatusIn('syncStatusSetup','info','ℹ No existing NutriTrack Gist found. Leave Gist ID blank to create a new one.');
+    }
+  } catch(e) { showSyncStatusIn('syncStatusSetup','error','✗ ' + e.message); }
+}
+
+// ── Advanced tab actions ───────────────────────────────────────────────────────
 async function saveSyncSettings() {
   const token  = document.getElementById('syncToken').value.trim();
   const gistId = document.getElementById('syncGistId').value.trim();
@@ -5655,14 +6103,16 @@ async function saveSyncSettings() {
 
   if (gistId) {
     showSyncModalStatus('info', '⟳ Connecting to Gist…');
-    // Push current data so the Gist is seeded
-    try {
-      await pushToGist(false);
-      showSyncModalStatus('ok', '✓ Connected! Your data has been pushed to the Gist.');
-      document.getElementById('syncLastSaved').textContent = 'Last synced: ' + new Date().toLocaleString();
-    } catch(e) { showSyncModalStatus('error', '✗ ' + e.message); }
+    // PULL (not push) — never overwrite existing Gist data on initial connect
+    const ok = await pullFromGist();
+    if (ok) {
+      renderAll(); renderFitness();
+      showSyncModalStatus('ok', '✓ Connected! Data loaded from your Gist.');
+    } else {
+      showSyncModalStatus('error', '✗ Could not reach that Gist. Check your token and Gist ID.');
+    }
   } else {
-    showSyncModalStatus('ok', '✓ Token saved. Click "Create New Private Gist" to get a Gist ID, or enter one above.');
+    showSyncModalStatus('ok', '✓ Token saved. Click "Create New Private Gist" or enter a Gist ID above.');
   }
   updateSyncIndicator();
 }
@@ -5678,12 +6128,10 @@ async function createAndConnectGist() {
       public: false,
       files: { [GIST_FILE]: { content: JSON.stringify(buildSnapshot(), null, 2) } }
     });
-    const id = data.id;
-    localStorage.setItem(LS_GIST_ID, id);
+    localStorage.setItem(LS_GIST_ID, data.id);
     localStorage.setItem(LS_LAST_SYNC, new Date().toISOString());
-    document.getElementById('syncGistId').value = id;
-    showSyncModalStatus('ok', `✓ Gist created! ID: ${id}\n\nCopy this ID — paste it into any other device to share your data.`);
-    document.getElementById('syncLastSaved').textContent = 'Last synced: ' + new Date().toLocaleString();
+    document.getElementById('syncGistId').value = data.id;
+    showSyncModalStatus('ok', `✓ Gist created! ID: ${data.id}`);
     updateSyncIndicator();
   } catch(e) { showSyncModalStatus('error', '✗ ' + e.message); }
 }
@@ -5692,12 +6140,23 @@ async function forceSyncNow() {
   showSyncModalStatus('info', '⟳ Pulling latest data from Gist…');
   const ok = await pullFromGist();
   if (ok) {
-    renderAll();
+    renderAll(); renderFitness();
+    const last = localStorage.getItem(LS_LAST_SYNC);
+    const lastEl = document.getElementById('syncLastSaved');
+    if (lastEl && last) lastEl.textContent = 'Last synced: ' + new Date(last).toLocaleString();
     showSyncModalStatus('ok', '✓ Data pulled from Gist successfully.');
-    document.getElementById('syncLastSaved').textContent = 'Last synced: ' + new Date().toLocaleString();
   } else {
     showSyncModalStatus('error', '✗ Could not reach Gist. Check your token and Gist ID.');
   }
+}
+
+async function manualPush() {
+  showSyncModalStatus('info', '⟳ Pushing your data to Gist…');
+  await pushToGist(false);
+  const last = localStorage.getItem(LS_LAST_SYNC);
+  const lastEl = document.getElementById('syncLastSaved');
+  if (lastEl && last) lastEl.textContent = 'Last synced: ' + new Date(last).toLocaleString();
+  showSyncModalStatus('ok', '✓ Pushed to Gist!');
 }
 
 function clearSyncSettings() {
@@ -5705,10 +6164,10 @@ function clearSyncSettings() {
   localStorage.removeItem(LS_TOKEN);
   localStorage.removeItem(LS_GIST_ID);
   localStorage.removeItem(LS_LAST_SYNC);
-  document.getElementById('syncToken').value  = '';
-  document.getElementById('syncGistId').value = '';
-  showSyncModalStatus('info', 'Disconnected. Local data is still intact.');
+  localStorage.removeItem(LS_PROFILE_ACTIVE);
+  showSyncStatusIn('syncStatusSetup','info','Disconnected. Local data is still intact.');
   setSyncState('', 'Sync');
+  showSyncView('setup');
 }
 
 // ══════════════════════════════════
@@ -6436,8 +6895,10 @@ renderAll();
 renderFitness();
 
 // On startup: pull from Gist if configured, then re-render
+// _syncStartupGuard stays true until pull completes so auto-push doesn't fire first
 (async () => {
   const ok = await pullFromGist();
+  _syncStartupGuard = false; // now safe to auto-push on future saves
   if (ok) { renderAll(); renderFitness(); }
 })();
 
