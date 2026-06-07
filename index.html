@@ -716,6 +716,101 @@
   }
   .cf-advanced-toggle::-webkit-details-marker { display: none; }
 
+  /* ── Weight Tracker ── */
+  .wt-log-row {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 14px;
+  }
+  .wt-input {
+    flex: 1; background: var(--bg3); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text1); padding: 9px 12px;
+    font-size: 16px; font-weight: 700; outline: none; min-width: 0;
+    transition: border-color .2s;
+  }
+  .wt-input:focus { border-color: var(--accent); }
+  .wt-unit-btn {
+    padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer;
+    background: var(--bg3); border: 1.5px solid var(--border);
+    color: var(--text2); font-size: 13px; font-weight: 700; transition: all .15s;
+  }
+  .wt-unit-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .wt-log-btn {
+    padding: 9px 18px; background: var(--accent); border: none;
+    border-radius: var(--radius-sm); color: white; font-size: 13px;
+    font-weight: 700; cursor: pointer; transition: opacity .15s; white-space: nowrap;
+  }
+  .wt-log-btn:hover { opacity: .88; }
+  .wt-summary { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .wt-stat {
+    flex: 1; min-width: 80px; background: var(--bg3); border-radius: var(--radius-sm);
+    padding: 10px 12px; text-align: center;
+  }
+  .wt-stat-val { font-size: 20px; font-weight: 800; line-height: 1.1; }
+  .wt-stat-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+  .wt-chart-wrap {
+    width: 100%; overflow: hidden; margin-bottom: 10px;
+  }
+  .wt-chart-wrap svg { width: 100%; display: block; }
+  .wt-entries { max-height: 120px; overflow-y: auto; }
+  .wt-entry-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .wt-entry-row:last-child { border-bottom: none; }
+  .wt-entry-date { color: var(--text2); }
+  .wt-entry-val { font-weight: 700; }
+  .wt-entry-del {
+    background: none; border: none; color: var(--text3); cursor: pointer;
+    padding: 2px 6px; border-radius: 4px; font-size: 12px;
+  }
+  .wt-entry-del:hover { color: var(--red); }
+  .wt-empty { text-align: center; color: var(--text3); font-size: 13px; padding: 16px 0; }
+
+  /* ── Progress Calendar ── */
+  .prog-cal-nav { display: flex; align-items: center; gap: 8px; }
+  .prog-cal-nav-btn {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text2);
+    width: 28px; height: 28px; border-radius: 7px; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .prog-cal-nav-btn:hover { background: var(--card2); color: var(--text1); }
+  .prog-cal-month { font-size: 14px; font-weight: 700; min-width: 120px; text-align: center; }
+  .prog-cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 3px; margin-top: 10px;
+  }
+  .prog-cal-dow {
+    text-align: center; font-size: 10px; font-weight: 700;
+    color: var(--text3); padding: 4px 0; text-transform: uppercase; letter-spacing: .05em;
+  }
+  .prog-cal-day {
+    aspect-ratio: 1; border-radius: 7px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer;
+    font-size: 12px; font-weight: 600; position: relative;
+    transition: all .15s; color: var(--text2); background: var(--bg3);
+  }
+  .prog-cal-day:hover { background: var(--card2); color: var(--text1); }
+  .prog-cal-day.empty { background: none; cursor: default; pointer-events: none; }
+  .prog-cal-day.today {
+    border: 2px solid var(--accent); color: var(--accent2); font-weight: 800;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  .prog-cal-day.has-food {
+    background: color-mix(in srgb, var(--green) 20%, var(--bg3));
+    color: var(--text1);
+  }
+  .prog-cal-day.has-food.today {
+    background: color-mix(in srgb, var(--green) 20%, transparent);
+  }
+  .prog-cal-day.future { opacity: .35; cursor: default; pointer-events: none; }
+  .prog-cal-day .cal-ex-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--red); position: absolute; bottom: 3px;
+  }
+  .prog-cal-legend { display: flex; gap: 14px; margin-top: 10px; font-size: 11px; color: var(--text3); flex-wrap: wrap; }
+  .prog-cal-legend-item { display: flex; align-items: center; gap: 5px; }
+  .prog-cal-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
   /* ── Progress Section ── */
   .prog-period-row { display: flex; gap: 6px; margin-bottom: 14px; }
   .period-btn {
@@ -1334,6 +1429,43 @@
 
     <!-- ══════════ PROGRESS ══════════ -->
     <div class="section" id="section-progress">
+
+      <!-- ── Calendar Quick View ── -->
+      <div class="chart-card" style="margin-bottom:14px">
+        <div class="chart-card-header">
+          <div class="prog-cal-nav">
+            <button class="prog-cal-nav-btn" onclick="calMonthNav(-1)">‹</button>
+            <div class="prog-cal-month" id="calMonthLabel"></div>
+            <button class="prog-cal-nav-btn" onclick="calMonthNav(1)">›</button>
+          </div>
+          <span class="chart-card-sub" style="font-size:11px">tap day to open</span>
+        </div>
+        <div class="prog-cal-grid" id="progressCal"></div>
+        <div class="prog-cal-legend">
+          <div class="prog-cal-legend-item"><div class="prog-cal-legend-dot" style="background:color-mix(in srgb,var(--green) 40%,var(--bg3))"></div>Food logged</div>
+          <div class="prog-cal-legend-item"><div class="prog-cal-legend-dot" style="border:2px solid var(--accent);background:transparent"></div>Today</div>
+          <div class="prog-cal-legend-item"><div class="prog-cal-legend-dot" style="background:var(--red);border-radius:50%;width:6px;height:6px;margin:2px"></div>Exercise</div>
+        </div>
+      </div>
+
+      <!-- ── Weight Tracker ── -->
+      <div class="chart-card" style="margin-bottom:14px" id="weightCard">
+        <div class="chart-card-header" style="margin-bottom:12px">
+          <span class="chart-card-title">⚖️ Weight</span>
+          <div id="wtTrendBadge"></div>
+        </div>
+        <div id="wtSummary"></div>
+        <!-- Log weight row -->
+        <div class="wt-log-row">
+          <input class="wt-input" type="number" id="wtInput" placeholder="e.g. 185.5" step="0.1" min="50" max="700">
+          <button class="wt-unit-btn active" id="wtUnitLbs" onclick="setWtUnit('lbs')">lbs</button>
+          <button class="wt-unit-btn" id="wtUnitKg" onclick="setWtUnit('kg')">kg</button>
+          <button class="wt-log-btn" onclick="logWeight()">+ Log</button>
+        </div>
+        <div class="wt-chart-wrap" id="wtChart"></div>
+        <div class="wt-entries" id="wtEntries"></div>
+      </div>
+
       <div class="prog-period-row">
         <button class="period-btn active" onclick="setProgPeriod(7,this)">7 Days</button>
         <button class="period-btn" onclick="setProgPeriod(14,this)">14 Days</button>
@@ -3625,6 +3757,10 @@ let scanData = null;
 let progPeriod = 7;
 let selectedExercise = null;
 let activeExCat = 'All';
+let weightLog = [];
+let _wtUnit = 'lbs';
+let _calViewMonth = new Date();
+const WEIGHT_KEY = 'nt_weight_log';
 
 const MEALS = [
   { id: 'breakfast', name: 'Breakfast', emoji: '🌅' },
@@ -4233,8 +4369,9 @@ function saveState() {
     localStorage.setItem('nt_recipes', JSON.stringify(recipes));
     localStorage.setItem('nt_customFoods', JSON.stringify(customFoods));
     localStorage.setItem('nt_exercises', JSON.stringify(exercises));
+    localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightLog));
   } catch(e) {}
-  scheduleSyncPush(); // debounced push to GitHub Gist (no-op if not configured)
+  scheduleSyncPush();
 }
 function loadState() {
   try {
@@ -4243,6 +4380,7 @@ function loadState() {
     const cf = localStorage.getItem('nt_customFoods'); if (cf) customFoods = JSON.parse(cf);
     const ex = localStorage.getItem('nt_exercises'); if (ex) exercises = JSON.parse(ex);
     const g = localStorage.getItem('nt_goals'); if (g) GOALS = { ...GOALS, ...JSON.parse(g) };
+    const wl = localStorage.getItem(WEIGHT_KEY); if (wl) weightLog = JSON.parse(wl);
   } catch(e) {}
 }
 
@@ -4505,6 +4643,230 @@ function applyScanResults() {
 // ══════════════════════════════════
 // PROGRESS CHARTS
 // ══════════════════════════════════
+// ══════════════════════════════════
+// WEIGHT TRACKER
+// ══════════════════════════════════
+function setWtUnit(u) {
+  _wtUnit = u;
+  document.getElementById('wtUnitLbs').classList.toggle('active', u === 'lbs');
+  document.getElementById('wtUnitKg').classList.toggle('active',  u === 'kg');
+}
+
+function logWeight() {
+  const val = parseFloat(document.getElementById('wtInput').value);
+  if (!val || val < 20 || val > 700) { toast('⚠️ Enter a valid weight'); return; }
+  const today = dateKey(new Date());
+  weightLog = weightLog.filter(e => e.date !== today); // replace today's entry
+  weightLog.push({ date: today, weight: val, unit: _wtUnit });
+  weightLog.sort((a, b) => a.date.localeCompare(b.date));
+  saveState();
+  document.getElementById('wtInput').value = '';
+  renderWeightCard();
+  toast('⚖️ Weight logged!');
+}
+
+function deleteWeightEntry(date) {
+  weightLog = weightLog.filter(e => e.date !== date);
+  saveState();
+  renderWeightCard();
+}
+
+// Convert any weight to a target unit
+function convertWeight(val, fromUnit, toUnit) {
+  if (fromUnit === toUnit) return val;
+  return fromUnit === 'lbs' ? val / 2.20462 : val * 2.20462;
+}
+
+function renderWeightCard() {
+  const summEl    = document.getElementById('wtSummary');
+  const chartEl   = document.getElementById('wtChart');
+  const entriesEl = document.getElementById('wtEntries');
+  const trendEl   = document.getElementById('wtTrendBadge');
+
+  if (!weightLog.length) {
+    summEl.innerHTML    = '';
+    chartEl.innerHTML   = '';
+    trendEl.innerHTML   = '';
+    entriesEl.innerHTML = `<div class="wt-empty">No weight entries yet. Log your first weight above to start tracking your journey! 💪</div>`;
+    return;
+  }
+
+  // Normalize all to _wtUnit for display
+  const norm = weightLog.map(e => ({
+    ...e, display: Math.round(convertWeight(e.weight, e.unit, _wtUnit) * 10) / 10
+  }));
+
+  const latest  = norm[norm.length - 1];
+  const first   = norm[0];
+  const change  = Math.round((latest.display - first.display) * 10) / 10;
+  const changeStr = (change > 0 ? '+' : '') + change + ' ' + _wtUnit;
+  const changeColor = change < 0 ? 'var(--green)' : change > 0 ? 'var(--red)' : 'var(--text2)';
+
+  // Trend over last 7 entries
+  let trendHtml = '';
+  if (norm.length >= 2) {
+    const recent = norm.slice(-Math.min(7, norm.length));
+    const slope  = recent[recent.length-1].display - recent[0].display;
+    const arrow  = slope < -0.2 ? '↓' : slope > 0.2 ? '↑' : '→';
+    const col    = slope < -0.2 ? 'var(--green)' : slope > 0.2 ? 'var(--red)' : 'var(--text2)';
+    trendHtml = `<span style="font-size:20px;color:${col};font-weight:800">${arrow}</span>`;
+  }
+  trendEl.innerHTML = trendHtml;
+
+  // Summary stats
+  summEl.innerHTML = `
+    <div class="wt-summary">
+      <div class="wt-stat">
+        <div class="wt-stat-val">${latest.display} <span style="font-size:12px;color:var(--text3)">${_wtUnit}</span></div>
+        <div class="wt-stat-lbl">Current</div>
+      </div>
+      <div class="wt-stat">
+        <div class="wt-stat-val">${first.display} <span style="font-size:12px;color:var(--text3)">${_wtUnit}</span></div>
+        <div class="wt-stat-lbl">Starting</div>
+      </div>
+      <div class="wt-stat">
+        <div class="wt-stat-val" style="color:${changeColor}">${changeStr}</div>
+        <div class="wt-stat-lbl">Total Change</div>
+      </div>
+      <div class="wt-stat">
+        <div class="wt-stat-val">${norm.length}</div>
+        <div class="wt-stat-lbl">Entries</div>
+      </div>
+    </div>`;
+
+  // SVG line chart
+  if (norm.length >= 2) {
+    const W = 400, H = 90, PAD = { t:8, r:8, b:20, l:36 };
+    const CW = W - PAD.l - PAD.r;
+    const CH = H - PAD.t - PAD.b;
+    const vals = norm.map(e => e.display);
+    const minV = Math.min(...vals);
+    const maxV = Math.max(...vals);
+    const rangeV = maxV - minV || 1;
+
+    const px = i => PAD.l + (i / (norm.length - 1)) * CW;
+    const py = v => PAD.t + CH - ((v - minV) / rangeV) * CH;
+
+    const pts = norm.map((e, i) => `${px(i).toFixed(1)},${py(e.display).toFixed(1)}`);
+    const linePath  = 'M' + pts.join(' L');
+    // Filled area
+    const areaPath  = `M${px(0).toFixed(1)},${(PAD.t+CH).toFixed(1)} L${pts.join(' L')} L${px(norm.length-1).toFixed(1)},${(PAD.t+CH).toFixed(1)} Z`;
+
+    // Y-axis labels (min + max)
+    const yLabels = [
+      { v: maxV, y: py(maxV) },
+      { v: minV, y: py(minV) },
+    ];
+    // X-axis: first + last date labels
+    const fmtDate = s => { const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
+    const xLabels = [
+      { label: fmtDate(norm[0].date), x: px(0) },
+      { label: fmtDate(norm[norm.length-1].date), x: px(norm.length-1) },
+    ];
+
+    // Dots for last entry
+    const lastDot = `<circle cx="${px(norm.length-1).toFixed(1)}" cy="${py(latest.display).toFixed(1)}" r="5" fill="var(--accent)" stroke="var(--bg2)" stroke-width="2"/>`;
+
+    chartEl.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+        <defs>
+          <linearGradient id="wtGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>
+          </linearGradient>
+          <clipPath id="wtClip"><rect x="${PAD.l}" y="${PAD.t}" width="${CW}" height="${CH}"/></clipPath>
+        </defs>
+        <!-- grid line -->
+        <line x1="${PAD.l}" y1="${PAD.t}" x2="${PAD.l+CW}" y2="${PAD.t}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="${PAD.l}" y1="${PAD.t+CH}" x2="${PAD.l+CW}" y2="${PAD.t+CH}" stroke="var(--border)" stroke-width="1"/>
+        <!-- area fill -->
+        <path d="${areaPath}" fill="url(#wtGrad)" clip-path="url(#wtClip)"/>
+        <!-- line -->
+        <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#wtClip)"/>
+        <!-- y labels -->
+        ${yLabels.map(l => `<text x="${PAD.l-4}" y="${l.y.toFixed(1)}" text-anchor="end" font-size="9" fill="var(--text3)" dominant-baseline="middle">${l.v}</text>`).join('')}
+        <!-- x labels -->
+        <text x="${xLabels[0].x.toFixed(1)}" y="${H-2}" text-anchor="start" font-size="9" fill="var(--text3)">${xLabels[0].label}</text>
+        <text x="${xLabels[1].x.toFixed(1)}" y="${H-2}" text-anchor="end" font-size="9" fill="var(--text3)">${xLabels[1].label}</text>
+        <!-- latest dot -->
+        ${lastDot}
+      </svg>`;
+  } else {
+    chartEl.innerHTML = '';
+  }
+
+  // Recent entries list (newest first)
+  const recent = [...norm].reverse().slice(0, 10);
+  entriesEl.innerHTML = recent.map(e => {
+    const d = new Date(e.date + 'T00:00:00');
+    const label = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    return `<div class="wt-entry-row">
+      <span class="wt-entry-date">${label}</span>
+      <span class="wt-entry-val">${e.display} ${_wtUnit}</span>
+      <button class="wt-entry-del" onclick="deleteWeightEntry('${e.date}')" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════
+// PROGRESS CALENDAR
+// ══════════════════════════════════
+function calMonthNav(dir) {
+  _calViewMonth = new Date(_calViewMonth.getFullYear(), _calViewMonth.getMonth() + dir, 1);
+  renderProgressCalendar();
+}
+
+function renderProgressCalendar() {
+  const year  = _calViewMonth.getFullYear();
+  const month = _calViewMonth.getMonth();
+  const today = dateKey(new Date());
+
+  document.getElementById('calMonthLabel').textContent =
+    _calViewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startDow = firstDay.getDay(); // 0=Sun
+
+  const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html = DOW.map(d => `<div class="prog-cal-dow">${d}</div>`).join('');
+
+  // Empty pads
+  for (let i = 0; i < startDow; i++) html += `<div class="prog-cal-day empty"></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key  = dateKey(date);
+    const diaryEntry = diary[key];
+    const hasFood = diaryEntry && Object.values(diaryEntry.meals).some(m => m.length > 0);
+    const hasEx   = !!(exercises[key]?.length);
+    const isToday = key === today;
+    const isFuture = key > today;
+
+    let cls = 'prog-cal-day';
+    if (hasFood) cls += ' has-food';
+    if (isToday) cls += ' today';
+    if (isFuture) cls += ' future';
+
+    const exDot = hasEx ? `<div class="cal-ex-dot"></div>` : '';
+    const click = isFuture ? '' : `onclick="jumpToDate('${key}')"`;
+
+    html += `<div class="${cls}" ${click} title="${key}${hasFood?' · food logged':''}${hasEx?' · exercise':''}">
+      ${d}${exDot}
+    </div>`;
+  }
+
+  document.getElementById('progressCal').innerHTML = html;
+}
+
+function jumpToDate(key) {
+  // Parse the key back to a date and set currentDate
+  const [y, m, d] = key.split('-').map(Number);
+  currentDate = new Date(y, m - 1, d);
+  updateDateLabel();
+  showSection('diary');
+}
+
 function setProgPeriod(days, btn) {
   progPeriod = days;
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
@@ -4513,6 +4875,8 @@ function setProgPeriod(days, btn) {
 }
 
 function renderProgress() {
+  renderProgressCalendar();
+  renderWeightCard();
   const days = progPeriod;
   const dates = [];
   for (let i = days - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); dates.push(d); }
