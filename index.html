@@ -1592,15 +1592,6 @@
         <input class="sync-modal-input" id="scanProductName" type="text" placeholder="e.g. Chobani Greek Yogurt, Clif Bar">
       </div>
 
-      <!-- API Key (collapsible, only shown first time) -->
-      <details id="scanApiDetails" style="margin-bottom:10px">
-        <summary style="cursor:pointer;font-size:12px;color:var(--text3);padding:4px 0;user-select:none">🔑 Claude API Key (only needed first time per product)</summary>
-        <div style="margin-top:8px">
-          <input class="sync-modal-input" id="scanApiKey" type="password" placeholder="sk-ant-…">
-          <div class="sync-modal-hint">Stored in your browser. API is called once per product, then results are cached forever.</div>
-        </div>
-      </details>
-
       <!-- Upload area -->
       <div class="scan-upload-area" id="scanUploadArea" onclick="document.getElementById('scanFileInput').click()">
         <div class="scan-upload-icon">📸</div>
@@ -1617,7 +1608,7 @@
 
       <!-- Analyze button -->
       <button class="scan-analyze-btn" id="scanAnalyzeBtn" onclick="analyzeLabel()" style="display:none">
-        <span id="scanBtnText">🤖 Read Label with Claude</span>
+        <span id="scanBtnText">🔍 Read Label</span>
       </button>
 
       <!-- Status / Error -->
@@ -1645,18 +1636,6 @@
 
       <!-- Context hint -->
       <div id="ingContextHint" style="display:none;padding:10px 12px;background:color-mix(in srgb,var(--accent) 10%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:10px;font-size:13px;color:var(--text2);margin-bottom:12px"></div>
-
-      <!-- API Key (for Claude lookups) -->
-      <details id="ingApiDetails">
-        <summary style="cursor:pointer;font-size:12px;color:var(--text3);padding:4px 0;user-select:none">🔑 Claude API Key (only needed for ingredients not in the local database)</summary>
-        <div class="ing-api-row" style="margin-top:8px">
-          <div class="ing-api-inner">
-            <input class="ing-api-input" id="ingApiKey" type="password" placeholder="sk-ant-…">
-            <button class="ing-api-toggle" id="ingKeyToggle" onclick="toggleIngKey()">Show</button>
-          </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">Most common ingredients are in the local database and require no API call. The key is used only for unusual items.</div>
-        </div>
-      </details>
 
       <!-- Textarea -->
       <div class="ing-textarea-label" style="margin-top:12px">Paste the ingredient list below — copy directly from any recipe website:</div>
@@ -5338,15 +5317,10 @@ function openScanModal() {
   document.getElementById('scanAnalyzeBtn').style.display = 'none';
   document.getElementById('scanResults').style.display = 'none';
   document.getElementById('scanStatus').style.display = 'none';
-  document.getElementById('scanBtnText').textContent = '🤖 Read Label with Claude';
+  document.getElementById('scanBtnText').textContent = '🔍 Read Label';
   document.getElementById('scanAnalyzeBtn').disabled = false;
   document.getElementById('scanFileInput').value = '';
   document.getElementById('scanProductName').value = '';
-  // Pre-fill saved API key
-  const saved = localStorage.getItem('nt_apikey') || '';
-  document.getElementById('scanApiKey').value = saved;
-  if (saved) document.getElementById('scanApiDetails').removeAttribute('open');
-  else        document.getElementById('scanApiDetails').setAttribute('open', '');
   openModal('scanModal');
 }
 
@@ -5371,45 +5345,31 @@ async function analyzeLabel() {
   }
 
   const productName = (document.getElementById('scanProductName').value || '').trim();
-  const apiKey = (document.getElementById('scanApiKey').value || '').trim()
-                 || localStorage.getItem('nt_apikey') || '';
-
   // ── Cache check: instant hit if product name matches ─────────────────────
   if (productName) {
     const cached = labelCacheGet(productName);
     if (cached) {
       scanData = cached;
-      showScanStatus('ok', '⚡ Loaded from cache — no API call needed!');
+      showScanStatus('ok', '⚡ Loaded from cache instantly!');
       renderScanResults(scanData);
       return;
     }
-  }
-
-  if (!apiKey) {
-    showScanStatus('error', '⚠️ Enter your Claude API key above. After the first scan the result is cached — you won\'t need it again for this product.');
-    document.getElementById('scanApiDetails').setAttribute('open', '');
-    return;
   }
 
   const btn = document.getElementById('scanAnalyzeBtn');
   btn.disabled = true;
   document.getElementById('scanBtnText').textContent = '⏳ Reading…';
   document.getElementById('scanResults').style.display = 'none';
-  showScanStatus('loading', '🤖 Claude is reading your label…');
+  showScanStatus('loading', '🔍 Scanning label with OCR…');
 
   try {
-    const src = imgEl.src;
-    const base64 = src.split(',')[1];
-    const mimeMatch = src.match(/^data:([^;]+);/);
-    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-
-    const raw = await analyzeLabelWithClaude(base64, mimeType, productName, apiKey);
+    const raw = await analyzeLabelWithOCR(imgEl, productName);
 
     scanData = {
-      name:          raw.name          || productName || '',
-      brand:         raw.brand         || '',
-      servingName:   raw.servingName   || '1 serving',
-      servingUnit:   raw.servingUnit   || 'g',
+      name:            raw.name            || productName || '',
+      brand:           raw.brand           || '',
+      servingName:     raw.servingName     || '1 serving',
+      servingUnit:     raw.servingUnit     || 'g',
       gramsPerServing: +(raw.gramsPerServing || 100),
       calories:  +(raw.calories  || 0), protein:   +(raw.protein   || 0),
       carbs:     +(raw.carbs     || 0), fat:       +(raw.fat       || 0),
@@ -5423,14 +5383,11 @@ async function analyzeLabel() {
       magnesium:+(raw.magnesium || 0), zinc:+(raw.zinc || 0),
     };
 
-    // Save API key for next time
-    localStorage.setItem('nt_apikey', apiKey);
-
     // Cache permanently by product name
     const cacheKey = (productName || scanData.name).toLowerCase().trim();
     if (cacheKey) labelCacheSet(cacheKey, scanData);
 
-    showScanStatus('ok', '✓ Label read! Cached — no API call needed next time for this product.');
+    showScanStatus('ok', '✓ Label scanned! Review and adjust any values below, then tap "Use This Food".');
     renderScanResults(scanData);
 
   } catch(e) {
@@ -5438,65 +5395,161 @@ async function analyzeLabel() {
     console.error(e);
   } finally {
     btn.disabled = false;
-    document.getElementById('scanBtnText').textContent = '🤖 Read Label with Claude';
+    document.getElementById('scanBtnText').textContent = '🔍 Read Label';
   }
 }
 
-// ── Claude vision API call ────────────────────────────────────────────────────
-async function analyzeLabelWithClaude(base64, mimeType, productNameHint, apiKey) {
-  const prompt = `Analyze this nutrition facts label image and extract all the information. Return a single JSON object with these exact fields (numbers only, no units inside values):
+// ── Tesseract OCR + nutrition label parser ────────────────────────────────────
+async function analyzeLabelWithOCR(imgEl, productNameHint) {
+  // Run Tesseract OCR
+  let ocrText = '';
+  try {
+    showScanStatus('loading', '🔍 Running OCR… (this takes ~5–10 seconds)');
+    const worker = await Tesseract.createWorker('eng', 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round((m.progress || 0) * 100);
+          showScanStatus('loading', `🔍 OCR ${pct}%…`);
+        }
+      }
+    });
+    const { data: { text } } = await worker.recognize(imgEl);
+    await worker.terminate();
+    ocrText = text;
+  } catch(e) {
+    throw new Error('OCR failed: ' + e.message + '. Make sure the image is clear and well-lit.');
+  }
 
-{
-  "name": "product name (use hint if label unclear: ${productNameHint || 'unknown'})",
-  "brand": "brand name or empty string",
-  "servingName": "serving size text e.g. '1 cup', '2 tbsp', '12 fl oz', '1 can (355ml)'",
-  "servingUnit": "primary unit: g | oz | fl oz | ml | cup | tbsp | tsp | piece",
-  "gramsPerServing": convert serving to grams (fl oz × 29.57, oz × 28.35, ml = ml, g = g; for cups/tbsp estimate by density),
-  "calories": number,
-  "protein": grams,
-  "carbs": total carbohydrates in grams,
-  "fat": total fat in grams,
-  "fiber": grams,
-  "sugar": grams,
-  "sodium": percent Daily Value,
-  "calcium": percent Daily Value,
-  "iron": percent Daily Value,
-  "potassium": percent Daily Value,
-  "vitA": percent DV, "vitC": percent DV, "vitD": percent DV,
-  "vitE": percent DV, "vitK": percent DV,
-  "vitB1": percent DV, "vitB2": percent DV, "vitB3": percent DV,
-  "vitB6": percent DV, "vitB12": percent DV, "folate": percent DV,
-  "magnesium": percent DV, "zinc": percent DV
+  return parseLabelText(ocrText, productNameHint);
 }
 
-Use 0 for any value not visible. Return ONLY the JSON — no markdown, no explanation.`;
+// ── Nutrition label text parser (regex-based, FDA standard format) ────────────
+function parseLabelText(text, productNameHint) {
+  // Fix common OCR digit/letter confusions, then lowercase for matching
+  const fixed = text
+    .replace(/(?<=[0-9])[Oo](?=[^a-z]|$)/gm, '0')
+    .replace(/(?<=[^a-z])[Oo](?=[0-9])/gm, '0');
+  const t = fixed.toLowerCase();
 
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: [
-        { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
-        { type: 'text', text: prompt }
-      ]}]
-    })
-  });
-
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Claude API error ${resp.status}`);
+  // Helper: find first regex match, return float or fallback
+  function grab(patterns, fallback = 0) {
+    for (const p of [].concat(patterns)) {
+      const m = t.match(p);
+      if (m?.[1] != null) { const v = parseFloat(m[1]); if (!isNaN(v)) return v; }
+    }
+    return fallback;
   }
-  const result = await resp.json();
-  const text = result.content[0].text.trim()
-    .replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
-  return JSON.parse(text);
+  // Helper: find %DV integer
+  function grabPct(patterns) {
+    for (const p of [].concat(patterns)) {
+      const m = t.match(p);
+      if (m?.[1] != null) { const v = parseInt(m[1]); if (!isNaN(v)) return v; }
+    }
+    return 0;
+  }
+
+  // ── Calories ─────────────────────────────────────────────────────────────
+  const calories = grab([
+    /calories[^0-9]*?(\d+)/,
+    /(\d+)\s*calories/,
+    /energy[^0-9]*?(\d+)\s*kcal/,
+    /(\d+)\s*kcal/,
+  ]);
+
+  // ── Macros ───────────────────────────────────────────────────────────────
+  const fat = grab([
+    /total fat[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+    /^fat[^0-9]*?(\d+(?:\.\d+)?)\s*g/m,
+  ]);
+  const protein = grab([
+    /protein[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+    /protein[^0-9]*?(\d+(?:\.\d+)?)/,
+  ]);
+  const carbs = grab([
+    /total carbohydrate[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+    /carbohydrate[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+    /total carbs[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+  ]);
+  const fiber = grab([
+    /dietary fiber[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+    /\bfibre[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+    /\bfiber[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+  ]);
+  const sugar = grab([
+    /total sugars?[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+    /\bsugars?[^0-9]*?(\d+(?:\.\d+)?)\s*g/,
+  ]);
+
+  // ── Sodium (mg → %DV; FDA DV = 2300mg) ──────────────────────────────────
+  const sodiumMg = grab([
+    /sodium[^0-9]*?(\d+)\s*mg/,
+    /\bsalt[^0-9]*?(\d+)\s*mg/,
+  ]);
+  const sodium = Math.round(sodiumMg / 23);
+
+  // ── Cholesterol ──────────────────────────────────────────────────────────
+  const cholesterolMg = grab([/cholesterol[^0-9]*?(\d+)\s*mg/]);
+  const cholesterol = Math.round(cholesterolMg / 3); // DV = 300mg
+
+  // ── Serving size ─────────────────────────────────────────────────────────
+  let servingName = '1 serving';
+  let gramsPerServing = 100;
+  let servingUnit = 'g';
+
+  // Try to find "Serving Size …" line — grab up to 60 chars after it
+  const servRaw = text.match(/serving size[:\s]*(.{3,60})/i);
+  if (servRaw) {
+    servingName = servRaw[1].replace(/\s+/g, ' ').split(/\n/)[0].trim().substring(0, 50);
+
+    // Extract quantity in parentheses
+    const gM   = servingName.match(/\((\d+(?:\.\d+)?)\s*g\)/i);
+    const mlM  = servingName.match(/\((\d+(?:\.\d+)?)\s*ml\)/i);
+    const flM  = servingName.match(/\((\d+(?:\.\d+)?)\s*fl\.?\s*oz\)/i);
+    const ozM  = servingName.match(/\((\d+(?:\.\d+)?)\s*oz\)/i);
+
+    if (gM)       { gramsPerServing = parseFloat(gM[1]); }
+    else if (mlM) { gramsPerServing = parseFloat(mlM[1]); servingUnit = 'ml'; }
+    else if (flM) { gramsPerServing = parseFloat(flM[1]) * 29.5735; servingUnit = 'fl oz'; }
+    else if (ozM) { gramsPerServing = parseFloat(ozM[1]) * 28.3495; servingUnit = 'oz'; }
+    else {
+      // No parens — try bare grams/ml after the serving description
+      const bareG = t.match(/serving size[^0-9]*?(\d+(?:\.\d+)?)\s*g/);
+      if (bareG) gramsPerServing = parseFloat(bareG[1]);
+    }
+    gramsPerServing = Math.round(gramsPerServing) || 100;
+  }
+
+  // ── Vitamins & Minerals (%DV) ─────────────────────────────────────────────
+  // Pattern: "Vitamin D  2mcg  10%" — match the trailing %
+  const vitD     = grabPct([/vitamin\s*d[^0-9%]*?(\d+)\s*%/, /vit\.?\s*d[^0-9%]*?(\d+)\s*%/]);
+  const vitA     = grabPct([/vitamin\s*a[^0-9%]*?(\d+)\s*%/, /vit\.?\s*a[^0-9%]*?(\d+)\s*%/]);
+  const vitC     = grabPct([/vitamin\s*c[^0-9%]*?(\d+)\s*%/, /vit\.?\s*c[^0-9%]*?(\d+)\s*%/]);
+  const vitE     = grabPct([/vitamin\s*e[^0-9%]*?(\d+)\s*%/, /vit\.?\s*e[^0-9%]*?(\d+)\s*%/]);
+  const vitK     = grabPct([/vitamin\s*k[^0-9%]*?(\d+)\s*%/, /vit\.?\s*k[^0-9%]*?(\d+)\s*%/]);
+  const vitB1    = grabPct([/thiamin[^0-9%]*?(\d+)\s*%/, /vitamin\s*b\s*1[^0-9%]*?(\d+)\s*%/, /b1[^0-9%]*?(\d+)\s*%/]);
+  const vitB2    = grabPct([/riboflavin[^0-9%]*?(\d+)\s*%/, /vitamin\s*b\s*2[^0-9%]*?(\d+)\s*%/]);
+  const vitB3    = grabPct([/niacin[^0-9%]*?(\d+)\s*%/, /vitamin\s*b\s*3[^0-9%]*?(\d+)\s*%/]);
+  const vitB6    = grabPct([/vitamin\s*b\s*6[^0-9%]*?(\d+)\s*%/]);
+  const vitB12   = grabPct([/vitamin\s*b\s*1\s*2[^0-9%]*?(\d+)\s*%/]);
+  const folate   = grabPct([/folate[^0-9%]*?(\d+)\s*%/, /folic acid[^0-9%]*?(\d+)\s*%/]);
+  const calcium  = grabPct([/calcium[^0-9%]*?(\d+)\s*%/]);
+  const iron     = grabPct([/\biron[^0-9%]*?(\d+)\s*%/]);
+  const potassium= grabPct([/potassium[^0-9%]*?(\d+)\s*%/]);
+  const magnesium= grabPct([/magnesium[^0-9%]*?(\d+)\s*%/]);
+  const zinc     = grabPct([/\bzinc[^0-9%]*?(\d+)\s*%/]);
+
+  return {
+    name: productNameHint || '',
+    brand: '',
+    servingName,
+    servingUnit,
+    gramsPerServing,
+    calories, protein, carbs, fat, fiber, sugar,
+    sodium, cholesterol,
+    vitA, vitC, vitD, vitE, vitK,
+    vitB1, vitB2, vitB3, vitB6, vitB12, folate,
+    calcium, iron, potassium, magnesium, zinc,
+  };
 }
 
 function showScanStatus(type, msg) {
@@ -5956,43 +6009,68 @@ function lookupIngInDB(normName) {
   return hit || null;
 }
 
-// ── Claude batch call ───────────────────────────────────────────────────────
-async function fetchNutritionFromClaude(lines, apiKey) {
-  const numbered = lines.map((l, i) => `${i+1}. ${l}`).join('\n');
-  const prompt = `You are a precise nutrition database assistant. For each ingredient below, return a JSON array. Each element:
-{
-  "idx": <1-based number>,
-  "name": "<clean generic ingredient name, e.g. 'all-purpose flour'>",
-  "grams": <estimated grams for the stated amount; if no amount stated use 100>,
-  "per100g": {
-    "cal":<kcal>,"protein":<g>,"carbs":<g>,"fat":<g>,"fiber":<g>,"sugar":<g>,
-    "vitA":<% DV>,"vitC":<% DV>,"vitD":<% DV>,"vitE":<% DV>,"vitK":<% DV>,
-    "vitB1":<% DV>,"vitB2":<% DV>,"vitB3":<% DV>,"vitB6":<% DV>,"vitB12":<% DV>,"folate":<% DV>,
-    "calcium":<% DV>,"iron":<% DV>,"magnesium":<% DV>,"potassium":<% DV>,"sodium":<% DV>,"zinc":<% DV>
+// ── Open Food Facts lookup (free, no API key) ────────────────────────────────
+// Fetches each ingredient in parallel from Open Food Facts search API.
+// Returns array: [{ idx, name, grams, per100g }]
+async function fetchNutritionFromOFF(lines) {
+  const OFFBase = 'https://world.openfoodfacts.org/cgi/search.pl';
+
+  async function lookupOne(query, idx) {
+    // Strip amounts/units from query for better search — just the food name part
+    const cleanQuery = query
+      .replace(/^\d[\d\/\.\s]*/,'')           // leading number/fraction
+      .replace(/\b(cup|cups|tbsp|tsp|tablespoon|teaspoon|oz|lb|g|kg|ml|piece|slice|can|jar|bunch|clove|cloves|large|medium|small|pkg|package)\b.*/i,'')
+      .replace(/,.*$/,'')                       // stop at commas (e.g. "garlic, minced")
+      .trim();
+
+    const url = `${OFFBase}?search_terms=${encodeURIComponent(cleanQuery)}&action=process&json=1&page_size=5&fields=product_name,nutriments&sort_by=unique_scans_n`;
+
+    try {
+      const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!resp.ok) return { idx, name: cleanQuery, per100g: null };
+      const data = await resp.json();
+      const products = (data.products || []).filter(p => {
+        const n = p.nutriments;
+        return n && (n['energy-kcal_100g'] || n['energy_100g']) != null;
+      });
+      if (!products.length) return { idx, name: cleanQuery, per100g: null };
+
+      // Pick the product whose name most closely matches the query
+      const scored = products.map(p => {
+        const pn = (p.product_name || '').toLowerCase();
+        const qw = cleanQuery.toLowerCase().split(/\s+/);
+        const hits = qw.filter(w => w.length > 2 && pn.includes(w)).length;
+        return { p, score: hits };
+      });
+      scored.sort((a,b) => b.score - a.score);
+      const best = scored[0].p;
+      const n = best.nutriments;
+
+      const cal100    = Math.round(n['energy-kcal_100g'] ?? (n['energy_100g'] ?? 0) / 4.184);
+      const protein100= +(n['proteins_100g']       ?? 0).toFixed(1);
+      const carbs100  = +(n['carbohydrates_100g']  ?? 0).toFixed(1);
+      const fat100    = +(n['fat_100g']            ?? 0).toFixed(1);
+      const fiber100  = +(n['fiber_100g']          ?? 0).toFixed(1);
+      const sugar100  = +(n['sugars_100g']         ?? 0).toFixed(1);
+      // sodium_100g is in grams; DV = 2.3g → %DV
+      const sodium100 = Math.round(((n['sodium_100g'] ?? 0) / 2.3) * 100);
+
+      return {
+        idx,
+        name: best.product_name || cleanQuery,
+        per100g: { cal: cal100, protein: protein100, carbs: carbs100, fat: fat100,
+                   fiber: fiber100, sugar: sugar100, sodium: sodium100,
+                   vitA:0, vitC:0, vitD:0, vitE:0, vitK:0,
+                   vitB1:0, vitB2:0, vitB3:0, vitB6:0, vitB12:0, folate:0,
+                   calcium:0, iron:0, magnesium:0, potassium:0, zinc:0 },
+      };
+    } catch {
+      return { idx, name: cleanQuery, per100g: null };
+    }
   }
-}
-Use USDA values. Use 0 for unknown. Return ONLY the JSON array, no markdown.
 
-Ingredients:
-${numbered}`;
-
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5', max_tokens: 4096,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error?.message || `API ${resp.status}`); }
-  const result = await resp.json();
-  const raw = result.content[0].text.trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
-  return JSON.parse(raw);
+  // Run all lookups in parallel
+  return Promise.all(lines.map((line, i) => lookupOne(line, i + 1)));
 }
 
 // ── Main parser / orchestrator ──────────────────────────────────────────────
@@ -6000,11 +6078,8 @@ let ingResults = [];  // holds result objects for current session
 
 async function parseIngredients() {
   const textarea = document.getElementById('ingTextarea');
-  const apiKey = document.getElementById('ingApiKey').value.trim();
   const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 1);
   if (!lines.length) { showIngStatus('error', '⚠️ Paste at least one ingredient.'); return; }
-
-  if (apiKey) localStorage.setItem('nt_apikey', apiKey);
 
   const btn = document.getElementById('ingParseBtn');
   btn.disabled = true;
@@ -6012,69 +6087,56 @@ async function parseIngredients() {
   showIngStatus('loading', `🔍 Looking up ${lines.length} ingredient${lines.length>1?'s':''}…`);
 
   ingResults = [];
-  const needClaude = [];   // { lineIdx, original, parsed }
+  const needWeb = [];   // { lineIdx, original, parsed, normName }
 
-  // ── Pass 1: DB + cache ────────────────────────────────────────────────────
+  // ── Pass 1: Local DB + cache (instant, no network) ───────────────────────
   for (let i = 0; i < lines.length; i++) {
     const original = lines[i];
     const parsed   = parseIngLine(original);
     const normName = normalizeIngName(parsed.rawName);
 
-    // Try local database first
     const dbFood = lookupIngInDB(normName);
     if (dbFood) {
       const g = simpleGrams(parsed.qty, parsed.unit) ?? Math.round(parsed.qty * 100);
-      const totals = calcFood(dbFood, g);
-      ingResults.push({ original, normName, name: dbFood.name, grams: g, totals, source: 'db', per100g: dbFood });
+      ingResults.push({ original, normName, name: dbFood.name, grams: g, totals: calcFood(dbFood, g), source: 'db', per100g: dbFood });
       continue;
     }
 
-    // Try local cache
     const cached = ingCacheGet(normName);
     if (cached) {
       const g = simpleGrams(parsed.qty, parsed.unit) ?? Math.round(parsed.qty * 100);
-      const totals = calcFood(cached, g);
-      ingResults.push({ original, normName, name: normName, grams: g, totals, source: 'cache', per100g: cached });
+      ingResults.push({ original, normName, name: normName, grams: g, totals: calcFood(cached, g), source: 'cache', per100g: cached });
       continue;
     }
 
-    // Queue for Claude
     ingResults.push(null); // placeholder
-    needClaude.push({ lineIdx: i, original, parsed, normName });
+    needWeb.push({ lineIdx: i, original, parsed, normName });
   }
 
-  // ── Pass 2: Claude for unfound ingredients ────────────────────────────────
-  if (needClaude.length) {
-    if (!apiKey) {
-      // Fill placeholders with "not found"
-      for (const { lineIdx, original, normName } of needClaude) {
-        ingResults[lineIdx] = { original, normName, name: normName, grams: 0, totals: null, source: 'miss', error: 'No API key — enter your Claude API key to look up unknown ingredients.' };
+  // ── Pass 2: Open Food Facts for anything not in local DB/cache ───────────
+  if (needWeb.length) {
+    try {
+      showIngStatus('loading', `🌐 Looking up ${needWeb.length} ingredient${needWeb.length>1?'s':''} online…`);
+      const webLines = needWeb.map(c => c.original);
+      const webResults = await fetchNutritionFromOFF(webLines);
+
+      for (let wi = 0; wi < needWeb.length; wi++) {
+        const { lineIdx, original, parsed, normName } = needWeb[wi];
+        const web = webResults.find(r => r.idx === wi + 1) || webResults[wi];
+        if (!web?.per100g) {
+          ingResults[lineIdx] = { original, normName, name: normName, grams: 0, totals: null, source: 'miss', error: 'Not found in database or online.' };
+          continue;
+        }
+        // Cache result for future use
+        ingCacheSet(normName, web.per100g);
+        ingCacheSet(normalizeIngName(web.name), web.per100g);
+
+        const g = simpleGrams(parsed.qty, parsed.unit) ?? 100;
+        ingResults[lineIdx] = { original, normName, name: web.name, grams: g, totals: calcFood(web.per100g, g), source: 'ai', per100g: web.per100g };
       }
-    } else {
-      try {
-        showIngStatus('loading', `🤖 Asking Claude AI for ${needClaude.length} ingredient${needClaude.length>1?'s':''}…`);
-        const claudeLines = needClaude.map(c => c.original);
-        const aiResults = await fetchNutritionFromClaude(claudeLines, apiKey);
-
-        for (let ci = 0; ci < needClaude.length; ci++) {
-          const { lineIdx, original, parsed, normName } = needClaude[ci];
-          const ai = aiResults.find(r => r.idx === ci + 1) || aiResults[ci];
-          if (!ai || !ai.per100g) {
-            ingResults[lineIdx] = { original, normName, name: normName, grams: 0, totals: null, source: 'miss', error: 'Claude could not identify this ingredient.' };
-            continue;
-          }
-          // Save to cache keyed by the AI's clean name AND the normalised name
-          ingCacheSet(normName, ai.per100g);
-          ingCacheSet(normalizeIngName(ai.name), ai.per100g);
-
-          const g = simpleGrams(parsed.qty, parsed.unit) ?? ai.grams ?? 100;
-          const totals = calcFood(ai.per100g, g);
-          ingResults[lineIdx] = { original, normName, name: ai.name, grams: g, totals, source: 'ai', per100g: ai.per100g };
-        }
-      } catch(e) {
-        for (const { lineIdx, original, normName } of needClaude) {
-          ingResults[lineIdx] = { original, normName, name: normName, grams: 0, totals: null, source: 'miss', error: 'Claude error: ' + e.message };
-        }
+    } catch(e) {
+      for (const { lineIdx, original, normName } of needWeb) {
+        ingResults[lineIdx] = { original, normName, name: normName, grams: 0, totals: null, source: 'miss', error: 'Online lookup failed: ' + e.message };
       }
     }
   }
@@ -6100,7 +6162,7 @@ function renderIngredientResults() {
 
   list.innerHTML = ingResults.map((r, i) => {
     if (!r) return '';
-    const sourceLabel = { db:'Database', cache:'Cached', ai:'Claude AI', miss:'Not Found' }[r.source];
+    const sourceLabel = { db:'Database', cache:'Cached', ai:'Web Lookup', miss:'Not Found' }[r.source];
     const sourceCls   = { db:'ing-source-db', cache:'ing-source-cache', ai:'ing-source-ai', miss:'ing-source-miss' }[r.source];
     const hasMacros = r.totals && r.grams > 0;
     return `
@@ -6181,10 +6243,6 @@ function addCheckedIngredients(target) {
 let _ingContext = 'diary';
 
 function _initIngModal() {
-  const saved = localStorage.getItem('nt_apikey') || '';
-  document.getElementById('ingApiKey').value = saved;
-  if (saved) document.getElementById('ingApiDetails').removeAttribute('open');
-  else        document.getElementById('ingApiDetails').setAttribute('open', '');
   document.getElementById('ingTextarea').value = '';
   document.getElementById('ingStatus').style.display = 'none';
   document.getElementById('ingResultsWrap').style.display = 'none';
@@ -6226,13 +6284,6 @@ function openIngredientModalForRecipe() {
 function ingModalBack() {
   closeModal('ingredientModal');
   if (_ingContext === 'diary') openModal('foodModal');
-}
-
-function toggleIngKey() {
-  const inp = document.getElementById('ingApiKey');
-  const btn = document.getElementById('ingKeyToggle');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-  btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
 }
 
 function showIngStatus(type, msg) {
